@@ -1,0 +1,27 @@
+{
+	"name": "spec",
+	"version": "1.0.0",
+	"description": "Solidity Smart Contract specification generation tool based on Foundry tests and slang",
+	"main": "bin/main.mjs",
+	"scripts": {
+		"start": "npx tsc && node bin/main.mjs",
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"format": "prettier --write ."
+	},
+	"keywords": [
+		"solidity",
+		"specification",
+		"slang",
+		"foundry",
+		"testing",
+		"smart",
+		"contracts"
+	],
+	"author": "0xCompose",
+	"license": "ISC",
+	"dependencies": {
+		"husky": "^9.1.7",
+		"slang": "^0.3.0",
+		"typescript": "^5.7.2"
+	}
+}
