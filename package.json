@@ -20,8 +20,11 @@
 	"author": "0xCompose",
 	"license": "ISC",
 	"dependencies": {
+		"@nomicfoundation/slang": "^0.18.3"
+	},
+	"devDependencies": {
+		"@types/node": "^22.10.2",
 		"husky": "^9.1.7",
-		"slang": "^0.3.0",
 		"typescript": "^5.7.2"
 	}
 }
