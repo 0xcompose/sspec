@@ -2,11 +2,15 @@
 	"name": "spec",
 	"version": "1.0.0",
 	"description": "Solidity Smart Contract specification generation tool based on Foundry tests and slang",
-	"main": "bin/main.mjs",
+	"main": "bin/src/index.mjs",
+	"bin": {
+		"spec": "bin/src/index.mjs"
+	},
 	"scripts": {
-		"start": "npx tsc && node bin/main.mjs",
-		"test": "echo \"Error: no test specified\" && exit 1",
-		"format": "prettier --write ."
+		"start": "npx tsc && node bin/src/index.mjs src/test-samples/",
+		"test": "npx tsc && npx mocha bin/test",
+		"format": "prettier --write .",
+		"update": "npx tsc && chmod +x bin/src/index.mjs && npm link"
 	},
 	"keywords": [
 		"solidity",
@@ -20,7 +24,11 @@
 	"author": "0xCompose",
 	"license": "ISC",
 	"dependencies": {
-		"@nomicfoundation/slang": "^0.18.3"
+		"@nomicfoundation/slang": "^0.18.3",
+		"@types/chai": "^5.0.1",
+		"@types/mocha": "^10.0.10",
+		"chai": "^5.1.2",
+		"mocha": "^11.0.1"
 	},
 	"devDependencies": {
 		"@types/node": "^22.10.2",
