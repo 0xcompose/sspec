@@ -7,8 +7,8 @@
 		"spec": "bin/src/index.mjs"
 	},
 	"scripts": {
-		"start": "npx tsc && node bin/src/index.mjs src/test-samples/",
-		"test": "npx tsc && npx mocha bin/test",
+		"start": "npx tsc && node bin/src/index.mjs ./samples/test/",
+		"test": "npx tsc && npx mocha bin/test/**",
 		"format": "prettier --write .",
 		"update": "npx tsc && chmod +x bin/src/index.mjs && npm link"
 	},
@@ -28,11 +28,13 @@
 		"@types/chai": "^5.0.1",
 		"@types/mocha": "^10.0.10",
 		"chai": "^5.1.2",
-		"mocha": "^11.0.1"
+		"mocha": "^11.0.1",
+		"mocha-suppress-logs": "^0.5.1"
 	},
 	"devDependencies": {
 		"@types/node": "^22.10.2",
 		"husky": "^9.1.7",
+		"ts-node": "^10.9.2",
 		"typescript": "^5.7.2"
 	}
 }

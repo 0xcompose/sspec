@@ -1,0 +1,4 @@
+{
+	"require": ["ts-node/register", "mocha-suppress-logs"],
+	"recursive": true
+}
