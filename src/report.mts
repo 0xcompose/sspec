@@ -12,21 +12,21 @@ export function reportFiles(categorizedFiles: CategorizedFiles) {
 
 	console.log(` |-------------------------------------`)
 	console.log(` |`)
-	console.log(` | Found ${testFiles.length} test files in test/:`)
+	console.log(` | Identified ${testFiles.length} test files in test/:`)
 	console.log(` |`)
 	for (const file of testFiles) {
 		console.log(` |-- ${path.basename(file.filePath)} (${file.version})`)
 	}
 	console.log(` |-------------------------------------`)
 	console.log(` |`)
-	console.log(` | Found ${setupFiles.length} setup files in test/:`)
+	console.log(` | Identified ${setupFiles.length} setup files in test/:`)
 	console.log(` |`)
 	for (const file of setupFiles) {
 		console.log(` |-- ${path.basename(file.filePath)} (${file.version})`)
 	}
 	console.log(` |-------------------------------------`)
 	console.log(` |`)
-	console.log(` | Found ${utilsFiles.length} utility files in test/:`)
+	console.log(` | Identified ${utilsFiles.length} utility files in test/:`)
 	console.log(` |`)
 	for (const file of utilsFiles) {
 		console.log(` |-- ${path.basename(file.filePath)} (${file.version})`)
