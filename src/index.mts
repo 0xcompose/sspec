@@ -2,4 +2,4 @@
 
 import { main } from "./main.mjs"
 
-main()
+main(process.argv[2] || "test/")

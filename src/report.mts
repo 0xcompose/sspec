@@ -1,11 +1,12 @@
 import path from "path"
 import { CategorizedFiles } from "./files.mjs"
-import { TestStructure } from "./parse.mjs"
+import { TestStructure } from "./parse/test.mjs"
 import warningSystem from "./warning.mjs"
 
 export function reportFiles(categorizedFiles: CategorizedFiles) {
 	const { testFiles, setupFiles, utilsFiles, errors } = categorizedFiles
-	const filesLength = testFiles.length + setupFiles.length + utilsFiles.length
+	const filesLength =
+		testFiles.length + setupFiles.length + utilsFiles.length + errors.length
 
 	console.log(` | Found ${filesLength} solidity files in test/:`)
 
@@ -69,20 +70,17 @@ function getTestDescriptionFromName(testName: string): string {
 		warningSystem.addWarning(
 			`Test name "${testName}" does not match the expected pattern.`,
 		)
-		// If not matching, split by "_" and return
-		return testName
+
+		// Highlight the test name in yellow
+		return `\x1b[33m${testName}\x1b[0m` // ANSI escape code for yellow
 	}
 
-	if (!testName.startsWith("test")) {
-		warningSystem.addWarning(
-			`Test name "${testName}" does not start with "test".`,
-		)
-		return testName
-	}
+	// Remove the "test", "testFork", "testFuzz", "testForkFuzz" prefixes
+	// TODO: handle the cases and make an output for each case
+	testName = testName.replace(/^(test(Fork)?(Fuzz)?_)/, "")
 
 	// If matching, process the test name to make it human-readable
 	const readableTestName = testName
-		.split("test")[1]
 		.split("_") // First split by underscores
 		.map(
 			(part) =>

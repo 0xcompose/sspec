@@ -1,13 +1,12 @@
 import { categorizeFiles, findSolidityFiles } from "./files.mjs"
 import { reportFiles, reportTests } from "./report.mjs"
-import { parseSolidityFile, TestStructure } from "./parse.mjs"
+import { parseSolidityTestFile, TestStructure } from "./parse/test.mjs"
 
 // Main function to parse all test files
-export function main() {
+export function main(testDirectory: string) {
 	console.time("Total Execution Time")
 
 	// Get the test directory from command-line arguments, default to "test/" if not provided
-	const testDirectory = process.argv[2] || "test/"
 	const solidityFiles = findSolidityFiles(testDirectory)
 
 	const categorizedFiles = categorizeFiles(solidityFiles)
@@ -20,7 +19,7 @@ export function main() {
 	const testStructures: TestStructure[] = []
 
 	for (const file of testFiles) {
-		const testFile = parseSolidityFile(file)
+		const testFile = parseSolidityTestFile(file)
 
 		if (!testFile) {
 			// Error is printed in parseSolidityFile

@@ -1,10 +1,10 @@
 import { NonterminalKind, Query } from "@nomicfoundation/slang/cst"
 import { ParseOutput, Parser } from "@nomicfoundation/slang/parser"
-import { SolidityFile } from "./files.mjs"
-import { extractSolidityVersion, getContractName } from "./utils.mjs"
+import { SolidityFile } from "../files.mjs"
+import { extractSolidityVersion, getContractName } from "../utils.mjs"
 import fs from "fs"
 import path from "path"
-import warningSystem from "./warning.mjs"
+import warningSystem from "../warning.mjs"
 
 export type ContractName = string
 export type FeatureName = string
@@ -25,11 +25,11 @@ export interface TestStructure {
 }
 
 // Function to parse a Solidity file and extract function names
-export function parseSolidityFile(
+export function parseSolidityTestFile(
 	file: SolidityFile,
 ): TestStructure | undefined {
 	const source = fs.readFileSync(file.filePath, "utf8")
-	// Use the utility function to find the solidity version in file
+
 	const solidityVersion = extractSolidityVersion(source)
 
 	const parser = Parser.create(solidityVersion)
