@@ -1,6 +1,6 @@
 import path from "path"
 import { CategorizedFiles } from "./files.mjs"
-import { TestStructure } from "./parse/test.mjs"
+import { TestFunction, TestStructure } from "./parse/test.mjs"
 import warningSystem from "./warning.mjs"
 
 export function reportFiles(categorizedFiles: CategorizedFiles) {
@@ -8,7 +8,7 @@ export function reportFiles(categorizedFiles: CategorizedFiles) {
 	const filesLength =
 		testFiles.length + setupFiles.length + utilsFiles.length + errors.length
 
-	console.log(` | Found ${filesLength} solidity files in test/:`)
+	console.log(` | Identified ${filesLength} solidity files in test/:`)
 
 	console.log(` |-------------------------------------`)
 	console.log(` |`)
@@ -19,10 +19,17 @@ export function reportFiles(categorizedFiles: CategorizedFiles) {
 	}
 	console.log(` |-------------------------------------`)
 	console.log(` |`)
-	console.log(` | Found ${errors.length} errors in test/:`)
+	console.log(` | Found ${setupFiles.length} setup files in test/:`)
 	console.log(` |`)
-	for (const error of errors) {
-		console.log(` |-- ${error.message}`)
+	for (const file of setupFiles) {
+		console.log(` |-- ${path.basename(file.filePath)} (${file.version})`)
+	}
+	console.log(` |-------------------------------------`)
+	console.log(` |`)
+	console.log(` | Found ${utilsFiles.length} utility files in test/:`)
+	console.log(` |`)
+	for (const file of utilsFiles) {
+		console.log(` |-- ${path.basename(file.filePath)} (${file.version})`)
 	}
 	console.log(` |-------------------------------------\n\n`)
 }
@@ -31,7 +38,7 @@ export function reportFiles(categorizedFiles: CategorizedFiles) {
 export function reportTests(testFiles: TestStructure[]) {
 	// Group tests by contract name
 
-	const contracts: Map<string, string[]> = new Map()
+	const contracts: Map<string, TestFunction[]> = new Map()
 
 	for (const file of testFiles) {
 		if (file.scope.type === "contract") {
@@ -61,8 +68,9 @@ export function reportTests(testFiles: TestStructure[]) {
 	}
 }
 
-function getTestDescriptionFromName(testName: string): string {
-	// Define the regular expression pattern
+function getTestDescriptionFromName(test: TestFunction): string {
+	let testName = test.name
+
 	const regexp = /^test(Fork)?(Fuzz)?(_Revert(If|When|On))?_(\w+)*$/
 
 	// Check if the test name matches the pattern
@@ -75,8 +83,6 @@ function getTestDescriptionFromName(testName: string): string {
 		return `\x1b[33m${testName}\x1b[0m` // ANSI escape code for yellow
 	}
 
-	// Remove the "test", "testFork", "testFuzz", "testForkFuzz" prefixes
-	// TODO: handle the cases and make an output for each case
 	testName = testName.replace(/^(test(Fork)?(Fuzz)?_)/, "")
 
 	// If matching, process the test name to make it human-readable

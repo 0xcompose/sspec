@@ -1,26 +1,43 @@
 import { NonterminalKind, Query } from "@nomicfoundation/slang/cst"
 import { ParseOutput, Parser } from "@nomicfoundation/slang/parser"
 import { SolidityFile } from "../files.mjs"
-import { extractSolidityVersion, getContractName } from "../utils.mjs"
+import {
+	checkIfFileHasMultipleContracts,
+	extractSolidityVersion,
+	getContractName,
+	isSetupFunction,
+	isTestFunction,
+} from "../utils.mjs"
 import fs from "fs"
 import path from "path"
 import warningSystem from "../warning.mjs"
 
 export type ContractName = string
 export type FeatureName = string
-export type TestFunctionName = string
 
-export interface Scope {
+// FunctionScope is a Unit test for specific
+// If file has FunctionScope, all test functions are assumed to have the same scope
+export interface TestFunction {
+	name: string
+	scope: FunctionScope | undefined
+}
+
+export interface FunctionScope {
+	type: "function"
+	sourceFunctionName: string
+}
+
+export interface ContractScope {
 	type: "contract"
 	name: string
 }
 
 export interface TestStructure {
+	testContract: ContractName
 	filePath: string
 	error: string
-	scope: Scope
-	tests: TestFunctionName[]
-	testContract: ContractName
+	scope: FunctionScope | ContractScope
+	tests: TestFunction[]
 	setUps: string[] // setUp(), _setUp(), _afterSetup(), _beforeSetup()
 }
 
@@ -37,27 +54,33 @@ export function parseSolidityTestFile(
 
 	if (!parseOutput.isValid()) {
 		for (const error of parseOutput.errors) {
-			console.error(
+			warningSystem.addError(
 				`Error at byte offset ${error.textRange.start.utf8}: ${error.message}`,
 			)
 		}
 		return
 	}
 
+	// Check if there is more than one contract in the file
+
 	const testFile: TestStructure = {
 		filePath: file.filePath,
 		error: "",
-		scope: getScope(file, parseOutput),
+		scope: getFileScope(file, parseOutput),
 		tests: [],
 		testContract: "",
 		setUps: [],
 	}
 
+	const cursor = parseOutput.createTreeCursor()
+
+	// Create a query to find all contract definitions
+	checkIfFileHasMultipleContracts(file, cursor)
+
 	// Create a query to find all function definitions
 	const query = Query.parse(
 		"@function [FunctionDefinition [FunctionName @function_name [Identifier]]]",
 	)
-	const cursor = parseOutput.createTreeCursor()
 	const matches = cursor.query([query])
 
 	// Extract the names of the test functions
@@ -67,30 +90,50 @@ export function parseSolidityTestFile(
 		const functionName = functionNameCursor.node.unparse()
 
 		// Filter out setUps
-		if (
-			["setUp", "_setUp", "_afterSetup", "_beforeSetup"].includes(
-				functionName,
-			)
-		) {
+		if (isSetupFunction(functionName)) {
 			testFile.setUps.push(functionName)
 			continue
 		}
 
 		// If doesn't start with "test", skip
-		if (!functionName.startsWith("test")) {
+		if (!isTestFunction(functionName)) {
 			continue
 		}
 
-		testFile.tests.push(functionName)
+		const testFunction: TestFunction = {
+			name: functionName,
+			scope: getFunctionScope(file, functionName),
+		}
+
+		testFile.tests.push(testFunction)
 	}
 
 	return testFile
 }
 
-function getScope(file: SolidityFile, parseOutput: ParseOutput): Scope {
+function getFileScope(
+	file: SolidityFile,
+	parseOutput: ParseOutput,
+): ContractScope {
 	return {
 		type: "contract",
 		name: getContractNameFromFilePath(file, parseOutput),
+	}
+}
+
+function getFunctionScope(
+	file: SolidityFile,
+	functionName: string,
+): FunctionScope {
+	// If test contract is named with a function name,
+	// use that function name as the scope
+
+	// If test function has test_functionName_Description,
+	// use that function name as the scope
+
+	return {
+		type: "function",
+		sourceFunctionName: functionName,
 	}
 }
 
