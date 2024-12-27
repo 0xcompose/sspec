@@ -1,21 +1,19 @@
 import fs from "fs"
 import { SolidityFile } from "../files.mjs"
-import { ContractName } from "./test.mjs"
 import { NonterminalKind, Query } from "@nomicfoundation/slang/cst"
 import { ParseOutput, Parser } from "@nomicfoundation/slang/parser"
-import warningSystem from "../warning.mjs"
 import { parseFunctions } from "../queries/functions.mjs"
+import { validateParseOutput } from "../validation/parseOutput.mjs"
+import { ContractName } from "./testFile.mjs"
 
 export type FunctionName = string
 
-interface Contract {
-	name: ContractName
-	functions: FunctionName[]
-}
+export type SourceContracts = Map<ContractName, FunctionName[]>
 
-export function parseSoliditySourceFiles(files: SolidityFile[]) {
-	const functions = new Map<ContractName, FunctionName[]>()
-	const contracts = new Map<ContractName, boolean>()
+export function parseSoliditySourceFiles(
+	files: SolidityFile[],
+): SourceContracts {
+	const contracts = new Map<ContractName, FunctionName[]>()
 
 	for (const file of files) {
 		const parsedContracts = parseSoliditySourceFile(file)
@@ -24,32 +22,31 @@ export function parseSoliditySourceFiles(files: SolidityFile[]) {
 			continue
 		}
 
-		for (const contract of parsedContracts) {
-			contracts.set(contract.name, true)
-			functions.set(contract.name, contract.functions)
+		// Merge parsedContracts into contracts
+		for (const [contractName, functions] of parsedContracts) {
+			if (!contracts.has(contractName)) {
+				contracts.set(contractName, [])
+			}
+			contracts.get(contractName)!.push(...functions)
 		}
 	}
+
+	return contracts
 }
 
 export function parseSoliditySourceFile(
 	file: SolidityFile,
-): Contract[] | undefined {
+): SourceContracts | undefined {
 	const source = fs.readFileSync(file.filePath, "utf8")
 
 	const parser = Parser.create(file.version)
 	ParseOutput
 	const parseOutput = parser.parse(NonterminalKind.SourceUnit, source)
 
-	if (!parseOutput.isValid()) {
-		for (const error of parseOutput.errors) {
-			warningSystem.addWarning(
-				`Error at contract ${file.filePath} at byte offset ${error.textRange.start.utf8}: ${error.message}`,
-			)
-		}
-		return
-	}
+	const { isValid } = validateParseOutput(parseOutput)
+	if (!isValid) return
 
-	const contracts: Contract[] = []
+	const contracts: SourceContracts = new Map()
 
 	// Query the contract names
 	const cursor = parseOutput.createTreeCursor()
@@ -67,7 +64,7 @@ export function parseSoliditySourceFile(
 
 		const functions: FunctionName[] = parseFunctions(cursor)
 
-		contracts.push({ name: contractName, functions })
+		contracts.set(contractName, functions)
 	}
 
 	return contracts

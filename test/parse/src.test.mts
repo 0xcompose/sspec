@@ -31,9 +31,9 @@ describe("Parse Source File", () => {
 			fail("Result is undefined")
 		}
 
-		expect(result).to.be.an.instanceOf(Array)
+		expect(result).to.be.an.instanceOf(Map)
 		expect(result).to.have.lengthOf(1)
-		expect(result[0]).to.have.property("name", "MaatVaultV1")
+		expect(result.has("MaatVaultV1")).to.be.true
 	})
 
 	it.skip("should parse the source file with multiple contracts", () => {
@@ -53,7 +53,7 @@ describe("Parse Source File", () => {
 			fail("Result is undefined")
 		}
 
-		const functions = result[0].functions
+		const functions = result.get("MaatVaultV1")
 
 		expect(functions).to.be.an.instanceOf(Array)
 		expect(functions).to.have.lengthOf(8)
