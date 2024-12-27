@@ -1,5 +1,5 @@
 {
-	"name": "spec",
+	"name": "sspec",
 	"version": "1.0.0",
 	"description": "Solidity Smart Contract specification generation tool based on Foundry tests and slang",
 	"main": "bin/src/index.mjs",
@@ -7,7 +7,7 @@
 		"spec": "bin/src/index.mjs"
 	},
 	"scripts": {
-		"start": "npx tsc && node bin/src/index.mjs ./samples/test/",
+		"start": "npx tsc && node bin/src/index.mjs ./samples/src/ ./samples/test/",
 		"test": "npx tsc && npx mocha bin/test/**",
 		"format": "prettier --write .",
 		"update": "npx tsc && chmod +x bin/src/index.mjs && npm link"

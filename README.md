@@ -1,6 +1,6 @@
-# Spec
+# sspec
 
-Spec comes from `specification`. Often smart contract repos lack detailed of even general description of what repo and smart contracts in it are doing. Only AIs can understand what's going (not always). So for sake of development and review simplicity this tool was created.
+sspec comes from `Solidity SPECification`. Often smart contract repos lack detailed of even general description of what repo and smart contracts in it are doing. Only AIs can understand what's going (not always). So for sake of development and review simplicity this tool was created.
 
 This is a re-imagined of [`scopelint`'s](https://github.com/ScopeLift/scopelint) `spec` command, which generated specification for source smart contracts based on test files and test names.
 
