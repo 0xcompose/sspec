@@ -41,33 +41,22 @@ contract MaatVaultCancelWithdrawTesting is MaatVaultTestSetup {
         maatVault.setNonce(12);
         vm.expectEmit(address(maatVault));
         emit IWithdrawRequestLogic.WithdrawalRequested(
-            sharesToWithdraw,
-            maatVault.previewRedeem(sharesToWithdraw),
-            owner,
-            maatVault.getIntentionId(12),
-            1
+            sharesToWithdraw, maatVault.previewRedeem(sharesToWithdraw), owner, maatVault.getIntentionId(12), 1
         );
-        bytes32 intentionId =
-            maatVault.requestWithdraw(sharesToWithdraw, 1, owner, receiver);
+        bytes32 intentionId = maatVault.requestWithdraw(sharesToWithdraw, 1, owner, receiver);
 
         skip(maatVault.withdrawCancellationDelay());
         uint256 sharesBeforeCancelling = maatVault.balanceOf(owner);
         maatVault.cancelWithdrawal(intentionId);
 
-        assertEq(
-            maatVault.balanceOf(owner),
-            sharesBeforeCancelling + sharesToWithdraw
-        );
+        assertEq(maatVault.balanceOf(owner), sharesBeforeCancelling + sharesToWithdraw);
 
         vm.expectRevert("MaatVaultV1: Request not found");
 
-        IMaatVaultV1.WithdrawRequestInfo memory info =
-            maatVault.getWithdrawRequest(intentionId);
+        IMaatVaultV1.WithdrawRequestInfo memory info = maatVault.getWithdrawRequest(intentionId);
     }
 
-    function test_CancellingWithdraw_RevertIf_NotEnoughTimeHasPassedYet()
-        public
-    {
+    function test_CancellingWithdraw_RevertIf_NotEnoughTimeHasPassedYet() public {
         uint256 sharesToWithdraw = 10 * 10;
 
         vm.startPrank(owner);
@@ -76,18 +65,11 @@ contract MaatVaultCancelWithdrawTesting is MaatVaultTestSetup {
         maatVault.setNonce(0);
         vm.expectEmit(address(maatVault));
         emit IWithdrawRequestLogic.WithdrawalRequested(
-            sharesToWithdraw,
-            maatVault.previewRedeem(sharesToWithdraw),
-            owner,
-            maatVault.getIntentionId(0),
-            1
+            sharesToWithdraw, maatVault.previewRedeem(sharesToWithdraw), owner, maatVault.getIntentionId(0), 1
         );
-        bytes32 intentionId =
-            maatVault.requestWithdraw(sharesToWithdraw, 1, owner, receiver);
+        bytes32 intentionId = maatVault.requestWithdraw(sharesToWithdraw, 1, owner, receiver);
 
-        vm.expectRevert(
-            "WithdrawRequestLogic: Not enough time has passed yet to withdraw"
-        );
+        vm.expectRevert("WithdrawRequestLogic: Not enough time has passed yet to withdraw");
         maatVault.cancelWithdrawal(intentionId);
     }
 
@@ -100,14 +82,9 @@ contract MaatVaultCancelWithdrawTesting is MaatVaultTestSetup {
         maatVault.setNonce(0);
         vm.expectEmit(address(maatVault));
         emit IWithdrawRequestLogic.WithdrawalRequested(
-            sharesToWithdraw,
-            maatVault.previewRedeem(sharesToWithdraw),
-            owner,
-            maatVault.getIntentionId(0),
-            1
+            sharesToWithdraw, maatVault.previewRedeem(sharesToWithdraw), owner, maatVault.getIntentionId(0), 1
         );
-        bytes32 intentionId =
-            maatVault.requestWithdraw(sharesToWithdraw, 1, owner, receiver);
+        bytes32 intentionId = maatVault.requestWithdraw(sharesToWithdraw, 1, owner, receiver);
 
         skip(maatVault.withdrawCancellationDelay());
         maatVault.cancelWithdrawal(intentionId);
@@ -125,14 +102,9 @@ contract MaatVaultCancelWithdrawTesting is MaatVaultTestSetup {
         maatVault.setNonce(0);
         vm.expectEmit(address(maatVault));
         emit IWithdrawRequestLogic.WithdrawalRequested(
-            sharesToWithdraw,
-            maatVault.previewRedeem(sharesToWithdraw),
-            owner,
-            maatVault.getIntentionId(0),
-            1
+            sharesToWithdraw, maatVault.previewRedeem(sharesToWithdraw), owner, maatVault.getIntentionId(0), 1
         );
-        bytes32 intentionId =
-            maatVault.requestWithdraw(sharesToWithdraw, 1, owner, receiver);
+        bytes32 intentionId = maatVault.requestWithdraw(sharesToWithdraw, 1, owner, receiver);
         vm.stopPrank();
 
         skip(maatVault.withdrawCancellationDelay());

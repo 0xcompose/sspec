@@ -7,12 +7,6 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "../../src/periphery/MaatOracleGlobalPPS.sol";
 import "test/Vault/_.Vault.Setup.sol";
 
-contract MockERC20 is ERC20 {
-    constructor() ERC20("USD Token", "USDT") {
-        _mint(msg.sender, 10000000 * 10 ** 18);
-    }
-}
-
 contract OracleTest is MaatVaultTestSetup {
     MockERC20 usdt;
 
@@ -22,13 +16,7 @@ contract OracleTest is MaatVaultTestSetup {
 
     function _afterSetUp() internal override {
         secondMaatVault = new MaatVaultHarness(
-            address(this),
-            address(token),
-            amountMin,
-            address(addressProvider),
-            commander,
-            watcher,
-            1
+            address(this), address(token), amountMin, address(addressProvider), commander, watcher, 1
         );
 
         addressProvider.addVault(address(secondMaatVault));
@@ -58,10 +46,8 @@ contract OracleTest is MaatVaultTestSetup {
         skip(skipInterval);
         oracle.updateGlobalPPS(vaults, ppsArray);
 
-        (uint256 ppsFromOracle, uint256 lastUpdateTime) =
-            oracle.getGlobalPPS(address(maatVault));
-        (uint256 prevPPSFromOracle, uint256 prevUpdateTime) =
-            oracle.getPrevGlobalPPS(address(maatVault));
+        (uint256 ppsFromOracle, uint256 lastUpdateTime) = oracle.getGlobalPPS(address(maatVault));
+        (uint256 prevPPSFromOracle, uint256 prevUpdateTime) = oracle.getPrevGlobalPPS(address(maatVault));
 
         // Assert PPS
 
@@ -83,11 +69,7 @@ contract OracleTest is MaatVaultTestSetup {
         ppsArray[0] = newPPS;
 
         vm.prank(nonAdmin);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Ownable.OwnableUnauthorizedAccount.selector, nonAdmin
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, nonAdmin));
         oracle.updateGlobalPPS(vaults, ppsArray);
     }
 
@@ -99,9 +81,7 @@ contract OracleTest is MaatVaultTestSetup {
         (uint256 pps,) = oracle.getGlobalPPS(address(maatVault));
         assertEq(pps, 10 ** 8);
 
-        vm.expectRevert(
-            "MaatOracleGlobalPPS: PricePerShare for this vault already initialized"
-        );
+        vm.expectRevert("MaatOracleGlobalPPS: PricePerShare for this vault already initialized");
         oracle.initPPS(address(maatVault), initialPPS, initialPPS);
     }
 
@@ -114,8 +94,13 @@ contract OracleTest is MaatVaultTestSetup {
         (uint256 ppsFromOracle,) = oracle.getGlobalPPS(address(secondMaatVault));
         assertEq(ppsFromOracle, currentPPS);
 
-        (uint256 prevPPSFromOracle,) =
-            oracle.getPrevGlobalPPS(address(secondMaatVault));
+        (uint256 prevPPSFromOracle,) = oracle.getPrevGlobalPPS(address(secondMaatVault));
         assertEq(prevPPSFromOracle, prevPPS);
+    }
+}
+
+contract MockERC20 is ERC20 {
+    constructor() ERC20("USD Token", "USDT") {
+        _mint(msg.sender, 10000000 * 10 ** 18);
     }
 }

@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import "./_.Vault.Setup.sol";
 
-contract MaatVaultGetPPSDataTest is MaatVaultTestSetup {
+contract GetPPSData is MaatVaultTestSetup {
     MaatVaultHarness targetVault;
     SharesBridgeMock sharesBridgeMock;
 
@@ -30,9 +30,7 @@ contract MaatVaultGetPPSDataTest is MaatVaultTestSetup {
     ) public {
         vm.assume(_assetsOnVault > 0);
         vm.assume(_assetsInStrategies > 10);
-        vm.assume(
-            _assetsInStrategies <= strategy.maxDeposit(address(maatVault))
-        );
+        vm.assume(_assetsInStrategies <= strategy.maxDeposit(address(maatVault)));
         // getPPSData() MUST return totalAssets as a sum of:
         // - assets on vault
         // - assets in strategies
@@ -50,8 +48,7 @@ contract MaatVaultGetPPSDataTest is MaatVaultTestSetup {
             maatVault.decreaseVirtualAssets(uint256(-int256(virtualAssets)));
         }
 
-        uint256 totalAssetsOnVault =
-            uint256(assetsOnVault) + uint256(assetsInStrategies);
+        uint256 totalAssetsOnVault = uint256(assetsOnVault) + uint256(assetsInStrategies);
 
         deal(address(token), address(this), totalAssetsOnVault);
 
@@ -63,8 +60,7 @@ contract MaatVaultGetPPSDataTest is MaatVaultTestSetup {
 
         _depositToStrategy(maatVault, address(strategy), assetsInStrategies);
 
-        int256 expectedTotalAssets =
-            int256(assetsOnVault) + int256(assetsInStrategies) + virtualAssets;
+        int256 expectedTotalAssets = int256(assetsOnVault) + int256(assetsInStrategies) + virtualAssets;
 
         assertApproxEqAbs(
             maatVault.getPPSData().totalAssets,
@@ -74,10 +70,7 @@ contract MaatVaultGetPPSDataTest is MaatVaultTestSetup {
         );
     }
 
-    function test_getPPSData_MustCalculateTotalSupply(
-        uint64 _totalSupply,
-        int64 _virtualSupply
-    ) public {
+    function test_getPPSData_MustCalculateTotalSupply(uint64 _totalSupply, int64 _virtualSupply) public {
         // Assume some initial total supply and virtual supply
         uint256 totalSupply = uint256(_totalSupply);
         int256 virtualSupply = int256(_virtualSupply);

@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import "./_LiFiExecutorProxy.Setup.t.sol";
 
-contract LiFiExecutorProxySetExecutorTest is LiFiExecutorProxyTestSetup {
+contract SetExecutor is LiFiExecutorProxyTestSetup {
     address private newExecutor = address(0x123);
 
     function test_setExecutor_SetsNewExecutor() public {
@@ -15,11 +15,7 @@ contract LiFiExecutorProxySetExecutorTest is LiFiExecutorProxyTestSetup {
         address nonOwner = address(0x456);
         vm.prank(nonOwner);
 
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Ownable.OwnableUnauthorizedAccount.selector, nonOwner
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, nonOwner));
 
         proxy.setExecutor(address(0x789));
     }
