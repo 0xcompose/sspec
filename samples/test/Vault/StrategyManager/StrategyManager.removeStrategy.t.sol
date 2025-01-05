@@ -6,7 +6,7 @@ import {Strategy} from "maat-strategies/contracts/Strategy.sol";
 
 import {IWithdrawRequestLogic} from "../../../src/interfaces/IExecutor.sol";
 
-contract MaatVaultRemoveStrategyTest is MaatVaultTestSetup {
+contract RemoveStrategy is MaatVaultTestSetup {
     function test_removeStrategy() public {
         maatVault.removeStrategy(strategyId);
 
@@ -29,23 +29,16 @@ contract MaatVaultRemoveStrategyTest is MaatVaultTestSetup {
         // Remove initial strategy
         maatVault.removeStrategy(strategyId);
 
-        YearnV3Strategy[] memory strategies =
-            _setupMultipleStrategiesOnVault(maatVault, numberOfStrategies);
+        YearnV3Strategy[] memory strategies = _setupMultipleStrategiesOnVault(maatVault, numberOfStrategies);
 
-        bytes32 _strategyId =
-            strategies[randomStrategyIndexToRemove].getStrategyId();
-        address strategyToRemove =
-            address(strategies[randomStrategyIndexToRemove]);
+        bytes32 _strategyId = strategies[randomStrategyIndexToRemove].getStrategyId();
+        address strategyToRemove = address(strategies[randomStrategyIndexToRemove]);
 
         maatVault.removeStrategy(_strategyId);
 
         address[] memory strategiesAfterRemoval = maatVault.getStrategies();
 
-        assertEq(
-            strategiesAfterRemoval.length,
-            numberOfStrategies - 1,
-            "Exactly 1 Strategy MUST be removed"
-        );
+        assertEq(strategiesAfterRemoval.length, numberOfStrategies - 1, "Exactly 1 Strategy MUST be removed");
 
         // Check all removed strategies are not in the Vault
         bool isStrategyRemoved = true;

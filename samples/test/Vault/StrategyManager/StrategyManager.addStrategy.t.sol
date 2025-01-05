@@ -6,7 +6,7 @@ import {Strategy} from "maat-strategies/contracts/Strategy.sol";
 
 import {IWithdrawRequestLogic} from "../../../src/interfaces/IExecutor.sol";
 
-contract MaatVaultAddStrategyTest is MaatVaultTestSetup {
+contract AddStrategy is MaatVaultTestSetup {
     Strategy strategyUSDC;
 
     address public yearnVaultAddr = 0x6FAF8b7fFeE3306EfcFc2BA9Fec912b4d49834C1;
@@ -15,28 +15,13 @@ contract MaatVaultAddStrategyTest is MaatVaultTestSetup {
     function _afterSetUp() internal override {
         maatVault.removeStrategy(strategyId);
 
-        MaatVaultV1 usdcVault = new MaatVaultV1(
-            address(this),
-            USDC,
-            100,
-            address(addressProvider),
-            commander,
-            watcher,
-            1
-        );
+        MaatVaultV1 usdcVault =
+            new MaatVaultV1(address(this), USDC, 100, address(addressProvider), commander, watcher, 1);
 
         IStrategyFromStrategies.StrategyParams memory strategyParams =
-        IStrategyFromStrategies.StrategyParams(
-            chainId, "YEARN", 3, USDC, yearnUSDTVault
-        );
+            IStrategyFromStrategies.StrategyParams(chainId, "YEARN", 3, USDC, yearnUSDTVault);
 
-        strategyUSDC = Strategy(
-            address(
-                new YearnV3Strategy(
-                    strategyParams, address(usdcVault), feeTo, performanceFee
-                )
-            )
-        );
+        strategyUSDC = Strategy(address(new YearnV3Strategy(strategyParams, address(usdcVault), feeTo, performanceFee)));
     }
 
     function test_getStrategyById_RevertsWhen_StrategyDoesNotExist() public {
@@ -44,17 +29,16 @@ contract MaatVaultAddStrategyTest is MaatVaultTestSetup {
         maatVault.getStrategyById(strategyId);
     }
 
-    function test_addStrategy_AddsStrategy() public {
+    function test_AddsStrategy() public {
         maatVault.addStrategy(address(strategy));
 
-        (address strategyAddress, bool isActive) =
-            maatVault.getStrategyById(strategyId);
+        (address strategyAddress, bool isActive) = maatVault.getStrategyById(strategyId);
 
         assertTrue(isActive);
         assertEq(strategyAddress, address(strategy));
     }
 
-    function test_addStrategy_AddsStrategyToArray() public {
+    function test_AddsStrategyToArray() public {
         address[] memory strategies = maatVault.getStrategies();
         assertEq(strategies.length, 0, "Strategy wasn't removed at Vault Setup");
 
@@ -62,16 +46,10 @@ contract MaatVaultAddStrategyTest is MaatVaultTestSetup {
 
         strategies = maatVault.getStrategies();
         assertEq(strategies.length, 1, "Strategy wasn't added to Vault");
-        assertEq(
-            strategies[0],
-            address(strategy),
-            "Added Strategy has incorrect address"
-        );
+        assertEq(strategies[0], address(strategy), "Added Strategy has incorrect address");
     }
 
-    function testFuzz_RevertIf_StrategyIsNotRegisteredInProvider(
-        address _strategy
-    ) public {
+    function testFuzz_RevertIf_StrategyIsNotRegisteredInProvider(address _strategy) public {
         vm.expectRevert("MaatVaultV1: Invalid strategy");
         maatVault.addStrategy(_strategy);
     }

@@ -6,12 +6,12 @@ import "./_LiFiExecutorProxy.Setup.t.sol";
 contract SetExecutor is LiFiExecutorProxyTestSetup {
     address private newExecutor = address(0x123);
 
-    function test_setExecutor_SetsNewExecutor() public {
+    function test_SetsNewExecutor() public {
         proxy.setExecutor(newExecutor);
         assertEq(proxy.executor(), newExecutor, "Executor should be updated");
     }
 
-    function test_setExecutor_OnlyOwnerCanCall() public {
+    function test_OnlyOwnerCanCall() public {
         address nonOwner = address(0x456);
         vm.prank(nonOwner);
 

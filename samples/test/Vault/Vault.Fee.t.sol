@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import "./_.Vault.Setup.sol";
 
-contract MaatVaultFeeTesting is MaatVaultTestSetup {
+contract Fee is MaatVaultTestSetup {
     address buyer = address(0x031);
 
     function _afterSetUp() internal override {

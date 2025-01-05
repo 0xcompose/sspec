@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import "../_.Vault.Setup.sol";
 
-contract MaatVaultGetTotalAssetsInStrategiesTest is MaatVaultTestSetup {
+contract GetTotalAssetsInStrategies is MaatVaultTestSetup {
     uint256 numberOfStrategies = 10;
 
     uint256 depositErrorDelta = 7 wei;
@@ -20,11 +20,7 @@ contract MaatVaultGetTotalAssetsInStrategiesTest is MaatVaultTestSetup {
     }
 
     function test_ZeroAssetsInStrategiesAfterDeployment() public view {
-        assertEq(
-            maatVault.getTotalAssetsInStrategies(),
-            0,
-            "total assets in strategies MUST be 0 after deployment"
-        );
+        assertEq(maatVault.getTotalAssetsInStrategies(), 0, "total assets in strategies MUST be 0 after deployment");
     }
 
     function test_DepositOnVaultDoesNotAffectTotalAssetsInStrategies() public {
@@ -41,9 +37,7 @@ contract MaatVaultGetTotalAssetsInStrategiesTest is MaatVaultTestSetup {
         );
     }
 
-    function testFuzz_DepositToStrategyIsReflectedInTotalAssetsInStrategies(
-        uint32 amountToDeposit
-    ) public {
+    function testFuzz_DepositToStrategyIsReflectedInTotalAssetsInStrategies(uint32 amountToDeposit) public {
         uint256 totalAssets = 1000e6;
         vm.assume(amountToDeposit > 10 wei);
         vm.assume(amountToDeposit <= totalAssets / numberOfStrategies);
@@ -76,9 +70,7 @@ contract MaatVaultGetTotalAssetsInStrategiesTest is MaatVaultTestSetup {
         }
     }
 
-    function testFuzz_WithdrawFromStrategyIsReflectedInTotalAssetsInStrategies(
-        uint32 amountToWithdraw
-    ) public {
+    function testFuzz_WithdrawFromStrategyIsReflectedInTotalAssetsInStrategies(uint32 amountToWithdraw) public {
         uint256 totalAssets = 1000e6;
 
         vm.assume(amountToWithdraw > 10 wei);
@@ -97,9 +89,7 @@ contract MaatVaultGetTotalAssetsInStrategiesTest is MaatVaultTestSetup {
             address strategy = strategies[i];
 
             // Distribute equally to all strategies
-            _depositToStrategy(
-                maatVault, strategy, totalAssets / numberOfStrategies
-            );
+            _depositToStrategy(maatVault, strategy, totalAssets / numberOfStrategies);
         }
 
         // Withdraw funds from strategies

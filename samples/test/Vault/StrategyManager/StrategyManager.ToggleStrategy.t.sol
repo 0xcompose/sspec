@@ -6,7 +6,7 @@ import {Strategy} from "maat-strategies/contracts/Strategy.sol";
 
 import {IWithdrawRequestLogic} from "../../../src/interfaces/IExecutor.sol";
 
-contract MaatVaultToggleStrategyTest is MaatVaultTestSetup {
+contract ToggleStrategy is MaatVaultTestSetup {
     Strategy strategyUSDC;
 
     address public yearnVaultAddr = 0x6FAF8b7fFeE3306EfcFc2BA9Fec912b4d49834C1;
@@ -15,35 +15,19 @@ contract MaatVaultToggleStrategyTest is MaatVaultTestSetup {
     function _afterSetUp() internal override {
         maatVault.removeStrategy(strategyId);
 
-        MaatVaultV1 usdcVault = new MaatVaultV1(
-            address(this),
-            USDC,
-            100,
-            address(addressProvider),
-            commander,
-            watcher,
-            1
-        );
+        MaatVaultV1 usdcVault =
+            new MaatVaultV1(address(this), USDC, 100, address(addressProvider), commander, watcher, 1);
 
         IStrategyFromStrategies.StrategyParams memory strategyParams =
-        IStrategyFromStrategies.StrategyParams(
-            chainId, "YEARN", 3, USDC, yearnUSDTVault
-        );
+            IStrategyFromStrategies.StrategyParams(chainId, "YEARN", 3, USDC, yearnUSDTVault);
 
-        strategyUSDC = Strategy(
-            address(
-                new YearnV3Strategy(
-                    strategyParams, address(usdcVault), feeTo, performanceFee
-                )
-            )
-        );
+        strategyUSDC = Strategy(address(new YearnV3Strategy(strategyParams, address(usdcVault), feeTo, performanceFee)));
     }
 
     function test_toggleStrategy() public {
         maatVault.addStrategy(address(strategy));
 
-        (address strategyAddress, bool isActive) =
-            maatVault.getStrategyById(strategyId);
+        (address strategyAddress, bool isActive) = maatVault.getStrategyById(strategyId);
 
         assertTrue(isActive);
         assertEq(strategyAddress, address(strategy));

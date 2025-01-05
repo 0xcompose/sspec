@@ -3,8 +3,8 @@ pragma solidity ^0.8.20;
 
 import "./_.Vault.Setup.sol";
 
-contract MaatVaultViewFunctionsTesting is MaatVaultTestSetup {
-    function testFuzz_ConvertToShares(uint256 assets) public {
+contract ViewFunctions is MaatVaultTestSetup {
+    function testFuzz_convertToShares(uint256 assets) public {
         vm.assume(assets < 10 ** 50);
 
         uint256 shares = maatVault.convertToShares(assets);

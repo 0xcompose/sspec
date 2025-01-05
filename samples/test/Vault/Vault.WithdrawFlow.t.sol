@@ -50,7 +50,7 @@ contract WithdrawFlow is MaatVaultTestSetup {
         oracle.updateGlobalPPS(vaultsArray, ppsArray);
     }
 
-    function testFuzz_RequestWithdraw_CreatingRequest(uint256 sharesToWithdraw) public {
+    function testFuzz_requestWithdraw_CreatingRequest(uint256 sharesToWithdraw) public {
         vm.assume(sharesToWithdraw <= 10 ** 40);
         vm.assume(sharesToWithdraw > amountMin);
 
@@ -79,7 +79,7 @@ contract WithdrawFlow is MaatVaultTestSetup {
         );
     }
 
-    function test_RequestWithdraw_RevertIf_ChainIsNotSupported() public {
+    function test_requestWithdraw_RevertIf_ChainIsNotSupported() public {
         uint256 sharesToWithdraw = 10 ** 6;
         vm.startPrank(owner);
         maatVault.approve(address(maatVault), sharesToWithdraw);
@@ -88,7 +88,7 @@ contract WithdrawFlow is MaatVaultTestSetup {
         maatVault.requestWithdraw(sharesToWithdraw, 12, owner, receiver);
     }
 
-    function test_RequestWithdraw_RevertIf_ReceiverIsZeroAddress() public {
+    function test_requestWithdraw_RevertIf_ReceiverIsZeroAddress() public {
         uint256 sharesToWithdraw = 10 ** 6;
         vm.startPrank(owner);
         maatVault.approve(address(maatVault), sharesToWithdraw);
@@ -97,7 +97,7 @@ contract WithdrawFlow is MaatVaultTestSetup {
         maatVault.requestWithdraw(sharesToWithdraw, 1, owner, address(0));
     }
 
-    function test_RequestWithdraw_RevertIf_AmountIsLessThatMinAmount() public {
+    function test_requestWithdraw_RevertIf_AmountIsLessThatMinAmount() public {
         uint256 sharesToWithdraw = 10;
         vm.startPrank(owner);
         maatVault.approve(address(maatVault), sharesToWithdraw);
@@ -106,7 +106,7 @@ contract WithdrawFlow is MaatVaultTestSetup {
         maatVault.requestWithdraw(sharesToWithdraw, 1, owner, address(0));
     }
 
-    function test_RequestWithdraw_RevertIf_SenderIsNotOwner() public {
+    function test_requestWithdraw_RevertIf_SenderIsNotOwner() public {
         uint256 assets = 10 ** 10;
         owner = address(0x123456);
         address notowner = address(0x1234567);
