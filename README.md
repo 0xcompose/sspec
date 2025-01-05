@@ -7,3 +7,10 @@ This is a re-imagined of [`scopelint`'s](https://github.com/ScopeLift/scopelint)
 Such functionality helps not only understanding your own suites of tests, but also review other's repos.
 
 Built using [slang](https://github.com/NomicFoundation/slang).
+
+## Foundry Test Naming According to SSPEC
+
+There are three valid naming conventions for unit testing (according to foundry best practice):
+1. `SourceContractName.t.sol`, where test contract is named `SourceContractNameTest`
+2. `SourceContractName.sourceFunctionName.t.sol`, where test contract is named `SourceFunctionName` with pascal case
+3. `SourceContractName.FeatureName.t.sol`, where test contract is named `FeatureName`. It is not required to be actual feature, feature can be anything, including integration tests

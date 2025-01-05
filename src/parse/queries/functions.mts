@@ -1,5 +1,5 @@
 import { Cursor, Query } from "@nomicfoundation/slang/cst"
-import { FunctionName } from "../parse/src.mjs"
+import { FunctionName } from "../types.mjs"
 
 // Doesn't change the state of the cursor due to the spawn of new cursor
 export function parseFunctions(

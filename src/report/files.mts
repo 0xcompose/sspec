@@ -1,5 +1,5 @@
 import path from "path"
-import { CategorizedFiles } from "../files.mjs"
+import { CategorizedFilesFromTestFolder } from "../utils/categorize.mjs"
 
 function printFileSection(files: any[], sectionName: string) {
 	console.log(` |-------------------------------------`)
@@ -11,10 +11,11 @@ function printFileSection(files: any[], sectionName: string) {
 	}
 }
 
-export function reportFiles(categorizedFiles: CategorizedFiles) {
-	const { testFiles, setupFiles, utilsFiles, errors } = categorizedFiles
-	const filesLength =
-		testFiles.length + setupFiles.length + utilsFiles.length + errors.length
+export function reportFilesFromTestFolder(
+	categorizedFiles: CategorizedFilesFromTestFolder,
+) {
+	const { testFiles, setupFiles, utilsFiles } = categorizedFiles
+	const filesLength = testFiles.length + setupFiles.length + utilsFiles.length
 
 	console.log(` | Identified ${filesLength} solidity files in test/:`)
 

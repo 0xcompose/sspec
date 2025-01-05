@@ -1,55 +1,93 @@
-import { Cursor } from "@nomicfoundation/slang/cst"
-import { SolidityFile } from "../files.mjs"
-import { getContractName } from "../utils.mjs"
+import { SolidityFile } from "../utils/files.mjs"
+import { isSourceFunction } from "../utils/utils.mjs"
 import warningSystem from "../warning.mjs"
-import { TestFileNamingConvention } from "../validation/testFileNamingConvention.mjs"
-import { ScopeType } from "./testFile.mjs"
-import { FunctionName } from "./src.mjs"
-
-export type TestFunctionScopeType = "function" | "unknown" // | "feature"
-
-export interface TestFunctionScope {
-	type: TestFunctionScopeType
-	sourceContract?: string
-	sourceFunction?: string
-}
-
-// FunctionScope is usually expected to a Unit test for specific function / constructor
-// If file has FunctionScope, all test functions are assumed to have the function scope
-export interface TestFunction {
-	name: FunctionName
-	scope: TestFunctionScope | undefined
-}
+import {
+	ScopeType,
+	SourceContracts,
+	TestFileScope,
+	TestFunctionScope,
+} from "./types.mjs"
 
 export function getTestFunctionScope(
 	file: SolidityFile,
 	functionName: string,
-	cursor: Cursor,
-	convention: TestFileNamingConvention,
+	testFileScope: TestFileScope,
+	sourceContracts: SourceContracts,
 ): TestFunctionScope {
-	// Default scope is unknown
-	const scope: TestFunctionScope = {
-		type: "unknown",
+	const unknownScope: TestFunctionScope = {
+		type: ScopeType.Unknown,
 	}
 
-	// Check if test contract follows second naming convention (Contract.function.t.sol)
-	if (convention === "second") {
-		// Contract name already indicates the function being tested
-		scope.type = "function"
-		scope.sourceFunction = getContractName(file, cursor)
-		scope.sourceContract = getSourceContractFromPath(file.filePath)
-		return scope
+	/* ============================
+	 * Contract scope
+	 * ============================ */
+
+	if (testFileScope.type === ScopeType.Contract) {
+		// Function's scope is ALWAYS function
+
+		const sourceFunctionName = getSourceFunctionNameFromTestName(
+			functionName,
+			sourceContracts,
+		)
+
+		if (!sourceFunctionName) {
+			warnAboutInvalidFunctionName(functionName, file)
+			return unknownScope
+		}
+
+		return {
+			type: ScopeType.Function,
+			target: sourceFunctionName,
+		}
 	}
 
-	// First naming convention or undefined
-	// Try to extract function name from test function name
-	const extractedFunction = getFunctionNameFromTestName(functionName)
+	/* ============================
+	 * Function scope
+	 * ============================ */
 
-	if (extractedFunction) {
-		scope.type = "function"
-		scope.sourceFunction = extractedFunction
-		scope.sourceContract = getSourceContractFromPath(file.filePath)
-		return scope
+	if (testFileScope.type === ScopeType.Function) {
+		// Function's scope is ALWAYS function
+
+		const sourceFunctionName = getSourceFunctionNameFromTestName(
+			functionName,
+			sourceContracts,
+		)
+
+		if (!sourceFunctionName) {
+			warnAboutInvalidFunctionName(functionName, file)
+			return unknownScope
+		}
+
+		return {
+			type: ScopeType.Function,
+			target: sourceFunctionName,
+		}
+	}
+
+	/* ============================
+	 * Feature scope
+	 * ============================ */
+
+	if (testFileScope.type === ScopeType.Feature) {
+		// Function's scope is EITHER function OR feature
+		const sourceFunctionName = getSourceFunctionNameFromTestName(
+			functionName,
+			sourceContracts,
+		)
+
+		if (!sourceFunctionName) {
+			// Feature scope
+			return {
+				type: ScopeType.Feature,
+				target: testFileScope.target,
+			}
+		} else {
+			// Function scope
+			return {
+				type: ScopeType.Function,
+				target: sourceFunctionName,
+			}
+		}
 	}
 
 	// Could not determine function scope
@@ -57,42 +95,56 @@ export function getTestFunctionScope(
 		`Unable to determine scope for test ${functionName} in ${file.filePath}`,
 	)
 
-	return scope
+	return unknownScope
 }
 
-function getSourceContractFromPath(filePath: string): string {
-	// Extract contract name from path like "test/Contract/Contract.*.t.sol"
-	const parts = filePath.split("/")
-	const contractDir = parts[parts.length - 2] // Get parent directory name
-	return contractDir
-}
+function getSourceFunctionNameFromTestName(
+	functionName: string,
+	sourceContracts: SourceContracts,
+): string | undefined {
+	if (!functionName) {
+		return undefined
+	}
 
-function getFunctionNameFromTestName(functionName: string): string | undefined {
 	// Match patterns like:
 	// test_functionName
-	// testFuzz_functionName
-	// test_RevertIf_functionName
-	const patterns = [
-		/^test_([a-z][a-zA-Z]*)/, // Basic test
-		/^testFuzz(?:ing)?_([a-z][a-zA-Z]*)/, // Fuzz test
-		/^test_(?:RevertIf|RevertWhen|RevertOn)_([a-z][a-zA-Z]*)/, // Revert test
-	]
+	// test_functionName_Description
+	// testFuzz_functionName_Description
+	// testForkFuzz_functionName_Description
+	const standardPattern =
+		/^test(?:Fork)?(?:Fuzz)?_([a-z][a-zA-Z]*)(?:_[A-Z].+)?$/
 
-	for (const pattern of patterns) {
-		const match = functionName.match(pattern)
-		if (match && match[1]) {
-			return match[1]
-		}
+	// For revert tests, we don't extract function names as they follow different patterns:
+	// Contract scope: test_functionName_RevertIf_Condition
+	// Function scope: test_RevertIf_Condition
+	// Feature scope: test_RevertIf_Condition (or test_functionName_RevertIf_Condition)
+	if (
+		functionName.includes("RevertIf") ||
+		functionName.includes("RevertWhen") ||
+		functionName.includes("RevertOn")
+	) {
+		return undefined
 	}
 
-	// Try splitting by underscore and checking second part
-	const parts = functionName.split("_")
-	if (parts.length >= 2) {
-		const candidate = parts[1]
-		if (/^[a-z][a-zA-Z]*$/.test(candidate)) {
-			return candidate
-		}
+	const match = functionName.match(standardPattern)
+	if (!match?.[1]) {
+		return undefined
 	}
 
-	return undefined
+	const extractedName = match[1]
+
+	if (!isSourceFunction(extractedName, sourceContracts)) {
+		return undefined
+	}
+
+	return extractedName
+}
+
+function warnAboutInvalidFunctionName(
+	functionName: string,
+	file: SolidityFile,
+) {
+	warningSystem.addWarning(
+		`Unable to determine source function name for test ${functionName} in ${file.filePath}`,
+	)
 }

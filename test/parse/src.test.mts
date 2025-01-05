@@ -1,7 +1,7 @@
 import fs from "fs"
 import { expect } from "chai"
 import { parseSoliditySourceFile } from "../../src/parse/src.mjs"
-import { extractSolidityVersion } from "../../src/utils.mjs"
+import { extractSolidityVersion } from "../../src/utils/utils.mjs"
 import { fail } from "assert"
 
 describe("Parse Source File", () => {

@@ -1,49 +1,12 @@
-import fs from "fs"
 import path from "path"
-import {
-	extractSolidityVersion,
-	isSetupFile,
-	isTestFile,
-	isUtilsFile,
-} from "./utils.mjs"
-import warningSystem from "./warning.mjs"
+import { isSetupFile, isTestFile, isUtilsFile } from "./utils.mjs"
+import warningSystem from "../warning.mjs"
+import { SolidityFile } from "./files.mjs"
 
-export interface SolidityFile {
-	filePath: string
-	version: string
-}
-
-export interface UnidentifiedFile {
-	message: string
-	file: SolidityFile
-}
-
-export interface CategorizedFiles {
+export interface CategorizedFilesFromTestFolder {
 	testFiles: SolidityFile[]
 	setupFiles: SolidityFile[]
 	utilsFiles: SolidityFile[]
-	errors: UnidentifiedFile[]
-}
-
-// Function to recursively find all Solidity files in a directory
-export function findSolidityFiles(dir: string): SolidityFile[] {
-	let results: SolidityFile[] = []
-	const list = fs.readdirSync(dir)
-
-	list.forEach((file) => {
-		file = path.resolve(dir, file)
-		const stat = fs.statSync(file)
-		if (stat && stat.isDirectory()) {
-			results = results.concat(findSolidityFiles(file))
-		} else if (file.endsWith(".sol")) {
-			// read first line of file
-			const source = fs.readFileSync(file, "utf8")
-			const version = extractSolidityVersion(source)
-			results.push({ filePath: file, version })
-		}
-	})
-
-	return results
 }
 
 // Setup files are files that have `Setup` in the filename
@@ -52,9 +15,10 @@ export function findSolidityFiles(dir: string): SolidityFile[] {
 // Utils files with `.t.sol` in the filename should be warned about, as they are not test files
 // Mock or Harness files are considered utility files
 // Any file that is not identified as a test, setup or utility is considered an error
-export function categorizeFiles(files: SolidityFile[]): CategorizedFiles {
+export function categorizeFilesFromTestFolder(
+	files: SolidityFile[],
+): CategorizedFilesFromTestFolder {
 	let cloneFiles = [...files]
-	const errors: UnidentifiedFile[] = []
 
 	// Filter out setup files
 	const setupFiles = cloneFiles.filter((file) => isSetupFile(file))
@@ -87,5 +51,5 @@ export function categorizeFiles(files: SolidityFile[]): CategorizedFiles {
 		)
 	}
 
-	return { testFiles, setupFiles, utilsFiles, errors }
+	return { testFiles, setupFiles, utilsFiles }
 }

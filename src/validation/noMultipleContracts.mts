@@ -1,6 +1,6 @@
 import { Cursor, Query } from "@nomicfoundation/slang/cst"
-import { SolidityFile } from "../files.mjs"
 import warningSystem from "../warning.mjs"
+import { SolidityFile } from "../utils/files.mjs"
 
 // Expecting a cursor from a parseOutput
 export function checkIfFileHasMultipleContracts(

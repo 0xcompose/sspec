@@ -1,14 +1,9 @@
-import fs from "fs"
-import { SolidityFile } from "../files.mjs"
 import { NonterminalKind, Query } from "@nomicfoundation/slang/cst"
 import { ParseOutput, Parser } from "@nomicfoundation/slang/parser"
-import { parseFunctions } from "../queries/functions.mjs"
+import { parseFunctions } from "./queries/functions.mjs"
 import { validateParseOutput } from "../validation/parseOutput.mjs"
-import { ContractName } from "./testFile.mjs"
-
-export type FunctionName = string
-
-export type SourceContracts = Map<ContractName, FunctionName[]>
+import { SourceContracts, FunctionName, ContractName } from "./types.mjs"
+import { readSolidityFile, SolidityFile } from "../utils/files.mjs"
 
 export function parseSoliditySourceFiles(
 	files: SolidityFile[],
@@ -37,7 +32,7 @@ export function parseSoliditySourceFiles(
 export function parseSoliditySourceFile(
 	file: SolidityFile,
 ): SourceContracts | undefined {
-	const source = fs.readFileSync(file.filePath, "utf8")
+	const source = readSolidityFile(file)
 
 	const parser = Parser.create(file.version)
 	ParseOutput

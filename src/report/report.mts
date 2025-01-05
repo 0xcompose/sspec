@@ -1,13 +1,29 @@
-import { TestFunction } from "../parse/testFunction.mjs"
 import warningSystem from "../warning.mjs"
-import { FunctionName, SourceContracts } from "../parse/src.mjs"
-import { ContractName, TestFile } from "../parse/testFile.mjs"
+import {
+	ContractName,
+	FeatureName,
+	FunctionName,
+	ScopeType,
+	SourceContracts,
+	TestFile,
+	TestFunction,
+} from "../parse/types.mjs"
+
+type ReportSection = {
+	functions: Map<FunctionName, TestFunction[]>
+	features: Map<FeatureName, TestFunction[]>
+	unidentified: TestFunction[]
+}
+
+type ContractReport = Map<ContractName, ReportSection>
 
 // `
 //  Source Contract Specification: Source Contract Name
-//  	├── Source Function Name
+//  	├── sourceFunctionName()
 //  	│   ├─ Test Function Description
-//  	├── Source Function Name
+//  	├── sourceFunctionName()
+//  	│   ├─ Test Function Description
+//  	├── Feature Name
 //  	│   ├─ Test Function Description
 //  	├── Unidentified Tests?
 //  	│   ├─ Test Function Description
@@ -18,17 +34,9 @@ export function reportTests(
 	testFiles: TestFile[],
 ) {
 	const contracts = initializeContractsMap(sourceContracts)
-	const unlinkedTests = new Map<
-		ContractName,
-		Map<FunctionName, TestFunction[]>
-	>()
-
-	populateTestFunctions(contracts, testFiles, unlinkedTests)
-	printContractsReport(contracts, "Source Contracts Specification")
-	printContractsReport(unlinkedTests, "Unlinked Test Contracts Specification")
+	populateReport(contracts, testFiles)
+	printContractsReport(contracts)
 }
-
-type ContractReport = Map<ContractName, Map<FunctionName, TestFunction[]>>
 
 function initializeContractsMap(
 	sourceContracts: SourceContracts,
@@ -36,144 +44,130 @@ function initializeContractsMap(
 	const contracts: ContractReport = new Map()
 
 	for (const [contractName, functionNames] of sourceContracts) {
-		const contractFunctions = new Map()
-		contracts.set(contractName, contractFunctions)
-
-		// Add all source functions
-		for (const functionName of functionNames) {
-			contractFunctions.set(functionName, [])
-		}
-
-		// Add "Unidentified Tests" category
-		contractFunctions.set("Unidentified Tests", [])
+		contracts.set(contractName, {
+			functions: new Map(functionNames.map((fn) => [fn, []])),
+			features: new Map(),
+			unidentified: [],
+		})
 	}
 
 	return contracts
 }
 
-function populateTestFunctions(
+function populateReport(
 	contracts: ContractReport,
 	testFiles: TestFile[],
-	unlinkedTests: Map<ContractName, Map<FunctionName, TestFunction[]>>,
 ): void {
 	for (const file of testFiles) {
-		if (file.scope.type !== "contract") continue
+		const contractName = file.targetContract
+		const reportSection = contracts.get(contractName)
 
-		const contractName = file.scope.target!
-		const contractFunctions = contracts.get(contractName)
+		if (!reportSection) continue
 
-		if (contractFunctions) {
-			for (const test of file.tests) {
-				const functionScope = determineTestScope(test)
-				ensureFunctionScopeExists(contractFunctions, functionScope)
-				contractFunctions.get(functionScope)!.push(test)
-			}
-		} else {
-			if (!unlinkedTests.has(contractName)) {
-				unlinkedTests.set(
-					contractName,
-					new Map([["Unidentified Tests", []]]),
-				)
-			}
-			const unlinkedFunctions = unlinkedTests.get(contractName)!
-			for (const test of file.tests) {
-				const functionScope = determineTestScope(test)
-				ensureFunctionScopeExists(unlinkedFunctions, functionScope)
-				unlinkedFunctions.get(functionScope)!.push(test)
+		for (const test of file.tests) {
+			switch (test.scope.type) {
+				case ScopeType.Function:
+					const functionTests = reportSection.functions.get(
+						test.scope.target,
+					)
+					if (functionTests) {
+						functionTests.push(test)
+					}
+					break
+
+				case ScopeType.Feature:
+					const featureName = test.scope.target
+					if (!reportSection.features.has(featureName)) {
+						reportSection.features.set(featureName, [])
+					}
+					reportSection.features.get(featureName)!.push(test)
+					break
+
+				default:
+					reportSection.unidentified.push(test)
 			}
 		}
 	}
 }
 
-function determineTestScope(test: TestFunction): string {
-	return test.scope?.type === "function"
-		? test.scope.sourceFunction || "Unidentified Tests"
-		: "Unidentified Tests"
-}
+function printContractsReport(contracts: ContractReport): void {
+	console.log("\nSource Contracts Specification:")
 
-function ensureContractExists(
-	contracts: Map<string, Map<string, TestFunction[]>>,
-	contractName: string,
-): void {
-	if (!contracts.has(contractName)) {
-		contracts.set(contractName, new Map([["Unidentified Tests", []]]))
-	}
-}
+	for (const [contractName, section] of contracts) {
+		console.log(`\n  Source Contract Specification: ${contractName}`)
 
-function ensureFunctionScopeExists(
-	contractFunctions: Map<string, TestFunction[]>,
-	functionScope: string,
-): void {
-	if (!contractFunctions.has(functionScope)) {
-		contractFunctions.set(functionScope, [])
-	}
-}
-
-function printContractsReport(
-	contracts: Map<string, Map<string, TestFunction[]>>,
-	title: string,
-): void {
-	const INDENT = "  "
-	console.log(`\n${title}:`)
-
-	for (const [contractName, functions] of contracts) {
-		console.log(`\n${INDENT}Source Contract Specification: ${contractName}`)
-
-		for (const [functionName, tests] of functions) {
-			if (tests.length === 0 && functionName !== "Unidentified Tests") {
-				console.log(`${INDENT}├── \x1b[31m${functionName}\x1b[0m`)
+		// Print functions
+		for (const [functionName, tests] of section.functions) {
+			if (tests.length === 0) {
+				console.log(`  ├── \x1b[31m${functionName}\x1b[0m`)
 				continue
 			}
+			console.log(`  ├── ${functionName}`)
+			printTestsList(tests)
+		}
 
-			console.log(`${INDENT}├── ${functionName}`)
-			printTestsList(tests, INDENT)
+		// Print features
+		for (const [featureName, tests] of section.features) {
+			console.log(`  ├── ${featureName}`)
+			printTestsList(tests)
+		}
+
+		// Print unidentified if any exist
+		if (section.unidentified.length > 0) {
+			console.log(`  ├── Unidentified Tests`)
+			printTestsList(section.unidentified)
 		}
 	}
 }
 
-function printTestsList(tests: TestFunction[], indent: string): void {
+function printTestsList(tests: TestFunction[]): void {
 	for (const [index, test] of tests.entries()) {
 		const isLast = index === tests.length - 1
 		const prefix = isLast ? "└──" : "├──"
-		console.log(
-			`${indent}│   ${prefix} ${getTestDescriptionFromName(test)}`,
-		)
+		console.log(`  │   ${prefix} ${getTestDescriptionFromName(test)}`)
 	}
 }
 
 function getTestDescriptionFromName(test: TestFunction): string {
-	let testName = test.name
+	if (test.scope.type === ScopeType.Unknown) {
+		return `\x1b[33m${test.name}\x1b[0m`
+	}
 
 	const regexp = /^test(Fork)?(Fuzz)?(_Revert(If|When|On))?_(\w+)*$/
 
-	// Check if the test name matches the pattern
-	if (!regexp.test(testName)) {
+	if (!regexp.test(test.name)) {
 		warningSystem.addWarning(
-			`Test name "${testName}" does not match the expected pattern.`,
+			`Test name "${test.name}" does not match the expected pattern.`,
 		)
-
-		// Highlight the test name in yellow
-		return `\x1b[33m${testName}\x1b[0m` // ANSI escape code for yellow
+		return `\x1b[33m${test.name}\x1b[0m`
 	}
 
-	testName = testName.replace(/^(test(Fork)?(Fuzz)?_)/, "")
+	let readableTestName = getReadableTestDescription(test.name)
 
-	// If matching, process the test name to make it human-readable
-	const readableTestName = testName
-		.split("_") // First split by underscores
-		.map(
-			(part) =>
-				part
-					.replace(/([a-z])([A-Z])/g, "$1 $2") // Then split by capital letters
-					.replace(/([A-Z]+)([A-Z][a-z])/g, "$1 $2"), // Handle continuous capitals
+	if (test.scope.type === ScopeType.Function) {
+		const functionNamePattern = new RegExp(
+			`\\b${test.scope.target}\\b`,
+			"i",
 		)
-		.join(" ") // Join the parts back with spaces
+		readableTestName = readableTestName
+			.replace(functionNamePattern, "")
+			.trim()
+	}
+
+	return /revert/i.test(test.name)
+		? `\x1b[31m${readableTestName}\x1b[0m`
+		: readableTestName
+}
+
+function getReadableTestDescription(testName: string): string {
+	return testName
+		.replace(/^(test(Fork)?(Fuzz)?_)/, "")
+		.split("_")
+		.map((part) =>
+			part
+				.replace(/([a-z])([A-Z])/g, "$1 $2")
+				.replace(/([A-Z]+)([A-Z][a-z])/g, "$1 $2"),
+		)
+		.join(" ")
 		.trim()
-
-	// Check if the test name contains 'revert' or 'reverts' and make it red
-	if (/revert/i.test(testName)) {
-		return `\x1b[31m${readableTestName}\x1b[0m` // ANSI escape code for red
-	}
-
-	return readableTestName
 }

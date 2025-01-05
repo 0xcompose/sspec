@@ -1,8 +1,10 @@
-import { categorizeFiles, findSolidityFiles } from "./files.mjs"
+import { categorizeFilesFromTestFolder } from "./utils/categorize.mjs"
 import { reportTests } from "./report/report.mjs"
 import { parseSoliditySourceFiles } from "./parse/src.mjs"
-import { TestFile, parseSolidityTestFile } from "./parse/testFile.mjs"
-import { reportFiles } from "./report/files.mjs"
+import { parseSolidityTestFile } from "./parse/testFile.mjs"
+import { reportFilesFromTestFolder } from "./report/files.mjs"
+import { SourceContracts, TestFile } from "./parse/types.mjs"
+import { findSolidityFiles, SolidityFile } from "./utils/files.mjs"
 
 // Main function to parse all test files
 export function main(sourceDirectory: string, testDirectory: string) {
@@ -18,13 +20,29 @@ export function main(sourceDirectory: string, testDirectory: string) {
 
 	const solidityFilesFromTestFolder = findSolidityFiles(testDirectory)
 
-	const categorizedFiles = categorizeFiles(solidityFilesFromTestFolder)
+	const categorizedFiles = categorizeFilesFromTestFolder(
+		solidityFilesFromTestFolder,
+	)
 
-	reportFiles(categorizedFiles)
+	reportFilesFromTestFolder(categorizedFiles)
 
-	const { testFiles } = categorizeFiles(solidityFilesFromTestFolder)
+	/* ============= PARSE TESTS ============= */
 
+	const { testFiles } = categorizedFiles
+
+	const parsedTestFiles = analyzeTestFiles(testFiles, parsedSource)
+
+	reportTests(parsedSource, parsedTestFiles)
+
+	console.timeEnd("Total Execution Time")
+}
+
+function analyzeTestFiles(
+	testFiles: SolidityFile[],
+	parsedSource: SourceContracts,
+): TestFile[] {
 	let totalTests = 0
+
 	const parsedTestFiles: TestFile[] = []
 
 	for (const file of testFiles) {
@@ -39,8 +57,7 @@ export function main(sourceDirectory: string, testDirectory: string) {
 		parsedTestFiles.push(testFile)
 	}
 
-	reportTests(parsedSource, parsedTestFiles)
-
 	console.log(`\n\nTotal tests found: ${totalTests}`)
-	console.timeEnd("Total Execution Time")
+
+	return parsedTestFiles
 }

@@ -4,7 +4,7 @@
 	"description": "Solidity Smart Contract specification generation tool based on Foundry tests and slang",
 	"main": "bin/src/index.mjs",
 	"bin": {
-		"spec": "bin/src/index.mjs"
+		"sspec": "bin/src/index.mjs"
 	},
 	"scripts": {
 		"start": "npx tsc && node bin/src/index.mjs ./samples/src/ ./samples/test/",

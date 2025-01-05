@@ -1,7 +1,7 @@
 import { Cursor, Query } from "@nomicfoundation/slang/cst"
 import { SolidityFile } from "./files.mjs"
-import warningSystem from "./warning.mjs"
-
+import warningSystem from "../warning.mjs"
+import { SourceContracts } from "../parse/types.mjs"
 export const DEFAULT_SOLIDITY_VERSION = "0.8.22"
 
 export function extractSolidityVersion(source: string): string {
@@ -63,4 +63,40 @@ export function isSetupFunction(functionName: string): boolean {
 
 export function isTestFunction(functionName: string): boolean {
 	return functionName.startsWith("test")
+}
+
+export function isSourceFunction(
+	supposedSourceFunctionName: string,
+	sourceContracts: SourceContracts,
+): boolean {
+	for (const [, functions] of sourceContracts) {
+		if (functions.includes(supposedSourceFunctionName)) {
+			return true
+		}
+	}
+
+	return false
+}
+
+export function isSourceContract(
+	supposedSourceContractName: string,
+	sourceContracts: SourceContracts,
+): boolean {
+	return sourceContracts.has(supposedSourceContractName)
+}
+
+export function isCamelCase(str: string): boolean {
+	return /^[a-z]+([A-Z][a-z]*)*$/.test(str)
+}
+
+export function isPascalCase(str: string): boolean {
+	return /^[A-Z][a-z]*(?:[A-Z][a-z]*)*$/.test(str)
+}
+
+export function toCamelCase(str: string): string {
+	return str
+		.replace(/(?:^\w|[A-Z]|\b\w)/g, (letter, index) =>
+			index === 0 ? letter.toLowerCase() : letter.toUpperCase(),
+		)
+		.replace(/\s+/g, "")
 }

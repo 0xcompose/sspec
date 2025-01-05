@@ -1,134 +1,88 @@
-import { NonterminalKind, Query, Cursor } from "@nomicfoundation/slang/cst"
-import { Parser } from "@nomicfoundation/slang/parser"
-import { SolidityFile } from "../files.mjs"
-import { getContractName, isSetupFunction, isTestFunction } from "../utils.mjs"
+import { Cursor, Query } from "@nomicfoundation/slang/cst"
+import {
+	getContractName,
+	isSetupFunction,
+	isTestFunction,
+} from "../utils/utils.mjs"
 import { checkIfFileHasMultipleContracts } from "../validation/noMultipleContracts.mjs"
-import { checkIfTestFileFollowsNamingConvention } from "../validation/testFileNamingConvention.mjs"
-import warningSystem from "../warning.mjs"
-import { FunctionName, SourceContracts } from "./src.mjs"
-import fs from "fs"
-import { validateParseOutput } from "../validation/parseOutput.mjs"
+import { getTestFunctionScope } from "./testFunction.mjs"
+import { getTestFileScope } from "./testFileScope.mjs"
+import { SourceContracts, TestFile, TestFileScope } from "./types.mjs"
+import { SolidityFile } from "../utils/files.mjs"
+import { parseSolidityFile } from "./parse.mjs"
 import path from "path"
-import { getTestFunctionScope, TestFunction } from "./testFunction.mjs"
-
-export type ContractName = string
-
-// Feature tests and integration tests are unsupported, that's why we have an unknown scope type
-export type ScopeType = "function" | "contract" | "unknown" // | "feature"
-
-export interface TestContractScope {
-	type: ScopeType
-	target: ContractName | FunctionName | undefined // | FeatureName
-}
-
-// Assumes there is only one contract in the file
-// otherwise throws an error
-export interface TestFile {
-	testContract: ContractName
-	filePath: string
-	scope: TestContractScope
-	tests: TestFunction[]
-	setUps: string[] // setUp(), _setUp(), _afterSetup(), _beforeSetup()
-}
 
 // Function to parse a Solidity file and extract function names
 export function parseSolidityTestFile(
 	file: SolidityFile,
 	parsedSource: SourceContracts,
 ): TestFile | undefined {
-	const source = fs.readFileSync(file.filePath, "utf8")
-
-	const parser = Parser.create(file.version)
-	const parseOutput = parser.parse(NonterminalKind.SourceUnit, source)
-
-	/* ============= PARSE OUTPUT VALIDATION ============= */
-
-	const { isValid } = validateParseOutput(parseOutput)
-	if (!isValid) return
+	const parseOutput = parseSolidityFile(file)
+	if (!parseOutput) return
 
 	const cursor = parseOutput.createTreeCursor()
 
-	// Check if there is more than one contract in the file
-	// Adds error to execution if there is more than one contract in the file
-	checkIfFileHasMultipleContracts(file, cursor)
+	validateFile(file, cursor)
 
-	// Validate that the file and contract name are following the naming convention
-	const { convention } = checkIfTestFileFollowsNamingConvention(file, cursor)
+	const testFileScope = getTestFileScope(file, cursor, parsedSource)
 
-	/* ============= FILE PASSED VALIDATION ============= */
+	const testFile = initializeTestFile(file, testFileScope, cursor)
+	populateTestFunctions(testFile, file, testFileScope, cursor, parsedSource)
+	console.log(JSON.stringify(testFile, null, 4))
+	return testFile
+}
 
-	const testFile: TestFile = {
+function validateFile(file: SolidityFile, cursor: Cursor) {
+	const childCursor = cursor.spawn()
+
+	checkIfFileHasMultipleContracts(file, childCursor)
+}
+
+function initializeTestFile(
+	file: SolidityFile,
+	testFileScope: TestFileScope,
+	cursor: Cursor,
+): TestFile {
+	return {
 		filePath: file.filePath,
-		scope: getFileScope(file, cursor),
+		scope: testFileScope,
+		testContract: getContractName(file, cursor),
+		targetContract: path.basename(file.filePath).split(".")[0],
 		tests: [],
-		testContract: "",
 		setUps: [],
 	}
+}
 
-	// Create a query to find all function definitions
+function populateTestFunctions(
+	testFile: TestFile,
+	file: SolidityFile,
+	testFileScope: TestFileScope,
+	cursor: Cursor,
+	parsedSource: SourceContracts,
+) {
 	const query = Query.parse(
-		"@function [FunctionDefinition [FunctionName @function_name [Identifier]]]",
+		"[FunctionDefinition [FunctionName @function_name [Identifier]]]",
 	)
 	const matches = cursor.query([query])
 
-	// Extract the names of the test functions
 	for (const match of matches) {
-		const functionNameCursor = match.captures["function_name"]![0]!
+		const functionName = match.captures["function_name"]![0]!.node.unparse()
 
-		const functionName = functionNameCursor.node.unparse()
-
-		// Filter out setUps
 		if (isSetupFunction(functionName)) {
 			testFile.setUps.push(functionName)
 			continue
 		}
 
-		// If doesn't start with "test", skip
-		if (!isTestFunction(functionName)) {
-			continue
-		}
+		if (!isTestFunction(functionName)) continue
 
-		const testFunction: TestFunction = {
+		testFile.tests.push({
 			name: functionName,
-			scope: getTestFunctionScope(file, functionName, cursor, convention),
-		}
-
-		testFile.tests.push(testFunction)
+			scope: getTestFunctionScope(
+				file,
+				functionName,
+				testFileScope,
+				parsedSource,
+			),
+		})
 	}
-
-	return testFile
-}
-
-function getFileScope(file: SolidityFile, cursor: Cursor): TestContractScope {
-	return {
-		type: "contract",
-		target: getContractNameFromFilePath(file, cursor),
-	}
-}
-
-function getContractNameFromFilePath(
-	file: SolidityFile,
-	cursor: Cursor,
-): ContractName {
-	const fileName = path.basename(file.filePath)
-	const folderName = path.basename(path.dirname(file.filePath))
-
-	// Try to extract contract name from the file name
-	const match = fileName.match(/^(.+)\.([a-zA-Z]+)\.t\.sol$/)
-
-	if (match) {
-		return match[1]
-	}
-
-	// If no contract name in file name, use the folder name
-	if (folderName) {
-		return folderName
-	}
-
-	// If neither is available, log a warning and use a default name
-	warningSystem.addWarning(
-		`Unable to determine scope name for file: ${file.filePath}`,
-	)
-
-	return getContractName(file, cursor)
 }
