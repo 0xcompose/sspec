@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import "./_.Vault.Setup.sol";
 
 contract MaatVaultViewFunctionsTesting is MaatVaultTestSetup {
-    function testFuzzing_ConvertToShares(uint256 assets) public {
+    function testFuzz_ConvertToShares(uint256 assets) public {
         vm.assume(assets < 10 ** 50);
 
         uint256 shares = maatVault.convertToShares(assets);
@@ -21,7 +21,7 @@ contract MaatVaultViewFunctionsTesting is MaatVaultTestSetup {
         assertEq(shares, (assets * 10) / 15);
     }
 
-    function testFuzzing_ConvertToAssets(uint256 shares) public {
+    function testFuzz_ConvertToAssets(uint256 shares) public {
         vm.assume(shares < 10 ** 50);
         vm.assume(shares > 100);
 
@@ -39,7 +39,7 @@ contract MaatVaultViewFunctionsTesting is MaatVaultTestSetup {
         assertEq(assets, (shares * 15) / 10);
     }
 
-    function testFuzzing_PreviewDeposit(uint256 assets) public {
+    function testFuzz_PreviewDeposit(uint256 assets) public {
         //if assets > 10 ** 69, it will overflow uint
         vm.assume(assets < 10 ** 50);
 
@@ -57,7 +57,7 @@ contract MaatVaultViewFunctionsTesting is MaatVaultTestSetup {
         assertEq(shares, (assets * 10) / 15);
     }
 
-    function testFuzzing_PreviewMint(uint256 shares) public {
+    function testFuzz_PreviewMint(uint256 shares) public {
         //if shares > 10 ** 68, it will overflow uint
         vm.assume(shares < 10 ** 50);
 
@@ -76,7 +76,7 @@ contract MaatVaultViewFunctionsTesting is MaatVaultTestSetup {
         assertEq(assets, (shares * 15) / 10);
     }
 
-    function testFuzzing_PreviewWithdraw(uint256 assets) public {
+    function testFuzz_PreviewWithdraw(uint256 assets) public {
         //if assets > 10 ** 69, it will overflow uint
         vm.assume(assets < 10 ** 50);
 
@@ -94,7 +94,7 @@ contract MaatVaultViewFunctionsTesting is MaatVaultTestSetup {
         assertEq(shares, (assets * 10) / 15);
     }
 
-    function testFuzzing_PreviewRedeem(uint256 shares) public {
+    function testFuzz_PreviewRedeem(uint256 shares) public {
         //if shares > 10 ** 68, it will overflow uint
         vm.assume(shares < 10 ** 50);
 
@@ -112,7 +112,7 @@ contract MaatVaultViewFunctionsTesting is MaatVaultTestSetup {
         assertEq(assets, (shares * 15) / 10);
     }
 
-    function testFuzzing_MaxWithdraw(uint256 shares, uint112 PPS) public {
+    function testFuzz_MaxWithdraw(uint256 shares, uint112 PPS) public {
         address user = address(0x1234);
         deal(address(maatVault), user, shares);
 
@@ -126,7 +126,7 @@ contract MaatVaultViewFunctionsTesting is MaatVaultTestSetup {
         assertEq(assets, maatVault.convertToAssets(shares));
     }
 
-    function testFuzzing_MaxRedeem(uint256 shares) public {
+    function testFuzz_MaxRedeem(uint256 shares) public {
         address user = address(0x1234);
         deal(address(maatVault), user, shares);
 

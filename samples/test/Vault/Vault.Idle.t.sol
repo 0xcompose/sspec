@@ -17,13 +17,7 @@ contract MaatVaultIdleTesting is MaatVaultTestSetup {
         stargateAdapter = new StargateAdapterMock();
 
         secondMaatVault = new MaatVaultHarness(
-            address(this),
-            address(token),
-            amountMin,
-            address(addressProvider),
-            commander,
-            watcher,
-            2
+            address(this), address(token), amountMin, address(addressProvider), commander, watcher, 2
         );
         addressProvider.changeStargateAdapter(address(stargateAdapter));
 
@@ -37,7 +31,7 @@ contract MaatVaultIdleTesting is MaatVaultTestSetup {
         maatVault.addRelatedVaults(eids, vaults);
     }
 
-    function testFuzzing_Deposit_IdleChange(uint256 assets) public {
+    function testFuzz_Deposit_IdleChange(uint256 assets) public {
         vm.assume(assets > amountMin && assets < 2 ** 112 - 1);
         deal(address(token), buyer, assets + 1);
 
@@ -49,7 +43,7 @@ contract MaatVaultIdleTesting is MaatVaultTestSetup {
         assertEq(maatVault.idle(), assets);
     }
 
-    function testFuzzing_Mint_IdleChange(uint256 shares) public {
+    function testFuzz_Mint_IdleChange(uint256 shares) public {
         vm.assume(shares > amountMin && shares < 2 ** 112 - 1);
         deal(address(token), buyer, shares + 1);
 
@@ -61,9 +55,7 @@ contract MaatVaultIdleTesting is MaatVaultTestSetup {
         assertEq(maatVault.idle(), maatVault.convertToAssets(shares));
     }
 
-    function testFuzzing_Withdraw_IdleChange(uint256 assets, uint256 dust)
-        public
-    {
+    function testFuzz_Withdraw_IdleChange(uint256 assets, uint256 dust) public {
         vm.assume(assets > amountMin && assets < 2 ** 112 - 1);
         vm.assume(dust <= assets);
         deal(address(maatVault), buyer, maatVault.previewWithdraw(assets));
@@ -81,9 +73,7 @@ contract MaatVaultIdleTesting is MaatVaultTestSetup {
         assertEq(maatVault.idle(), initialBalanceVault - assets);
     }
 
-    function testFuzzing_Redeem_IdleChanged(uint256 shares, uint256 dust)
-        public
-    {
+    function testFuzz_Redeem_IdleChanged(uint256 shares, uint256 dust) public {
         vm.assume(shares > amountMin && shares < 2 ** 112 - 1);
         vm.assume(dust <= shares);
         deal(address(maatVault), buyer, maatVault.previewWithdraw(shares));
@@ -98,15 +88,10 @@ contract MaatVaultIdleTesting is MaatVaultTestSetup {
         maatVault.redeem(shares, buyer, buyer);
 
         token.transfer(address(maatVault), 1);
-        assertEq(
-            maatVault.idle(),
-            initialBalanceVault - maatVault.previewRedeem(shares)
-        );
+        assertEq(maatVault.idle(), initialBalanceVault - maatVault.previewRedeem(shares));
     }
 
-    function testFuzzing_DepositInStrategy_IdleChanged(uint256 amountToDeposit)
-        public
-    {
+    function testFuzz_DepositInStrategy_IdleChanged(uint256 amountToDeposit) public {
         vm.assume(amountToDeposit > amountMin && amountToDeposit < 10 ** 10);
         deal(address(token), address(maatVault), amountToDeposit);
         maatVault.setIdle(amountToDeposit);
@@ -118,9 +103,7 @@ contract MaatVaultIdleTesting is MaatVaultTestSetup {
         assertEq(maatVault.idle(), 0);
     }
 
-    function testFuzzing_WithdrawFromStrategy_IdleChanged(
-        uint256 amountToWithdraw
-    ) public {
+    function testFuzz_WithdrawFromStrategy_IdleChanged(uint256 amountToWithdraw) public {
         vm.assume(amountToWithdraw > amountMin && amountToWithdraw < 10 ** 10);
         deal(address(token), address(maatVault), amountToWithdraw + 100);
         deal(address(token), address(strategy), amountToWithdraw + 100);
@@ -128,9 +111,7 @@ contract MaatVaultIdleTesting is MaatVaultTestSetup {
         maatVault.setIdle(amountToWithdraw + 100);
 
         token.approve(address(maatVault), amountToWithdraw + 2);
-        maatVault.depositInStrategy(
-            strategyId, amountToWithdraw + 2, bytes32(0)
-        );
+        maatVault.depositInStrategy(strategyId, amountToWithdraw + 2, bytes32(0));
 
         uint256 idleBefore = maatVault.idle();
         maatVault.withdrawFromStrategy(strategyId, amountToWithdraw, bytes32(0));
@@ -140,7 +121,7 @@ contract MaatVaultIdleTesting is MaatVaultTestSetup {
         assertEq(maatVault.idle(), idleBefore + amountToWithdraw);
     }
 
-    function testFuzzing_Bridge_IdleChanged(uint256 amountToBridge) public {
+    function testFuzz_Bridge_IdleChanged(uint256 amountToBridge) public {
         vm.assume(amountToBridge > amountMin && amountToBridge < 10 ** 10);
         deal(address(token), address(maatVault), amountToBridge);
         deal(address(token), address(strategy), amountToBridge);
@@ -157,10 +138,7 @@ contract MaatVaultIdleTesting is MaatVaultTestSetup {
     }
 
     //REVERT TESTS
-    function testFuzzing_Withdraw_RevertIf_IdleIncorrect(
-        uint256 assets,
-        uint256 dust
-    ) public {
+    function testFuzz_Withdraw_RevertIf_IdleIncorrect(uint256 assets, uint256 dust) public {
         vm.assume(assets > amountMin && assets < 2 ** 112 - 1);
         vm.assume(dust <= assets);
         deal(address(maatVault), buyer, maatVault.previewWithdraw(assets));
@@ -171,16 +149,11 @@ contract MaatVaultIdleTesting is MaatVaultTestSetup {
         vm.startPrank(buyer);
         maatVault.approve(address(maatVault), assets);
 
-        vm.expectRevert(
-            "MaatVaultV1: Arithmetic error during idle calculations"
-        );
+        vm.expectRevert("MaatVaultV1: Arithmetic error during idle calculations");
         maatVault.withdraw(assets, buyer, buyer);
     }
 
-    function testFuzzing_Redeem_RevertIf_IdleIncorrect(
-        uint256 shares,
-        uint256 dust
-    ) public {
+    function testFuzz_Redeem_RevertIf_IdleIncorrect(uint256 shares, uint256 dust) public {
         vm.assume(shares > amountMin && shares < 2 ** 112 - 1);
         vm.assume(dust <= shares);
         deal(address(maatVault), buyer, maatVault.previewWithdraw(shares));
@@ -191,39 +164,29 @@ contract MaatVaultIdleTesting is MaatVaultTestSetup {
         vm.startPrank(buyer);
         maatVault.approve(address(maatVault), shares);
 
-        vm.expectRevert(
-            "MaatVaultV1: Arithmetic error during idle calculations"
-        );
+        vm.expectRevert("MaatVaultV1: Arithmetic error during idle calculations");
         maatVault.redeem(shares, buyer, buyer);
     }
 
-    function testFuzzing_DepositItStrategy_RevertIf_IdleIncorrect(
-        uint256 amountToDeposit
-    ) public {
+    function testFuzz_DepositItStrategy_RevertIf_IdleIncorrect(uint256 amountToDeposit) public {
         vm.assume(amountToDeposit > amountMin && amountToDeposit < 10 ** 10);
         deal(address(token), address(maatVault), amountToDeposit);
         maatVault.setIdle(0);
 
         token.approve(address(maatVault), amountToDeposit);
 
-        vm.expectRevert(
-            "MaatVaultV1: Arithmetic error during idle calculations"
-        );
+        vm.expectRevert("MaatVaultV1: Arithmetic error during idle calculations");
         maatVault.depositInStrategy(strategyId, amountToDeposit, bytes32(0));
     }
 
-    function testFuzzing_Bridge_RevertIf_IdleIncorrect(uint256 amountToBridge)
-        public
-    {
+    function testFuzz_Bridge_RevertIf_IdleIncorrect(uint256 amountToBridge) public {
         vm.assume(amountToBridge > amountMin && amountToBridge < 10 ** 10);
         deal(address(token), address(maatVault), amountToBridge);
         deal(address(token), address(strategy), amountToBridge);
 
         maatVault.setIdle(0);
 
-        vm.expectRevert(
-            "MaatVaultV1: Arithmetic error during idle calculations"
-        );
+        vm.expectRevert("MaatVaultV1: Arithmetic error during idle calculations");
         maatVault.bridge(amountToBridge, 2, bytes32(0));
     }
 }

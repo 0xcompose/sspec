@@ -12,13 +12,7 @@ contract MaatVaultInternalFunctionsTesting is MaatVaultTestSetup {
         stargateAdapter = new StargateAdapterMock();
 
         secondMaatVault = new MaatVaultHarness(
-            address(this),
-            address(token),
-            amountMin,
-            address(addressProvider),
-            commander,
-            watcher,
-            2
+            address(this), address(token), amountMin, address(addressProvider), commander, watcher, 2
         );
         addressProvider.changeStargateAdapter(address(stargateAdapter));
 
@@ -32,31 +26,22 @@ contract MaatVaultInternalFunctionsTesting is MaatVaultTestSetup {
         maatVault.addRelatedVaults(eids, vaults);
     }
 
-    function testFuzzing_DepositInStrategy(
-        uint256 randomBalance,
-        uint256 amountToDeposit
-    ) public {
+    function testFuzz_DepositInStrategy(uint256 randomBalance, uint256 amountToDeposit) public {
         vm.assume(randomBalance > 10);
         vm.assume(amountToDeposit > 10);
         vm.assume(randomBalance >= amountToDeposit);
         vm.assume(amountToDeposit < strategy.maxDeposit(address(maatVault)));
 
         deal(address(token), address(maatVault), randomBalance);
-        maatVault.depositInStrategy(
-            strategyId, amountToDeposit, bytes32("intentionId")
-        );
+        maatVault.depositInStrategy(strategyId, amountToDeposit, bytes32("intentionId"));
 
         assertEq(strategy.balanceOf(address(maatVault)), amountToDeposit);
-        assertEq(
-            token.balanceOf(address(maatVault)), randomBalance - amountToDeposit
-        );
+        assertEq(token.balanceOf(address(maatVault)), randomBalance - amountToDeposit);
     }
 
-    function testFuzzing_WithdrawFromStrategy(
-        uint256 randomBalance,
-        uint256 amountToDeposit,
-        uint256 amountToWithdraw
-    ) public {
+    function testFuzz_WithdrawFromStrategy(uint256 randomBalance, uint256 amountToDeposit, uint256 amountToWithdraw)
+        public
+    {
         vm.assume(randomBalance > 0);
         vm.assume(amountToDeposit > 0);
         vm.assume(amountToWithdraw > 1);
@@ -66,38 +51,21 @@ contract MaatVaultInternalFunctionsTesting is MaatVaultTestSetup {
 
         deal(address(token), address(maatVault), randomBalance);
 
-        maatVault.depositInStrategy(
-            strategyId, amountToDeposit, bytes32("intentionId")
-        );
+        maatVault.depositInStrategy(strategyId, amountToDeposit, bytes32("intentionId"));
 
-        uint256 withdrawable =
-            IERC4626(yearnUSDTVault).maxWithdraw(address(strategy));
+        uint256 withdrawable = IERC4626(yearnUSDTVault).maxWithdraw(address(strategy));
 
         uint256 potentialLoss = 2 wei;
 
-        assertApproxEqAbs(
-            withdrawable,
-            amountToDeposit,
-            potentialLoss,
-            "Loss in funds is not less or eq than 2 wei"
-        );
+        assertApproxEqAbs(withdrawable, amountToDeposit, potentialLoss, "Loss in funds is not less or eq than 2 wei");
 
-        amountToWithdraw =
-            amountToWithdraw > withdrawable ? withdrawable : amountToWithdraw;
+        amountToWithdraw = amountToWithdraw > withdrawable ? withdrawable : amountToWithdraw;
 
-        maatVault.withdrawFromStrategy(
-            strategyId, amountToWithdraw, bytes32("intentionId")
-        );
+        maatVault.withdrawFromStrategy(strategyId, amountToWithdraw, bytes32("intentionId"));
 
+        assertApproxEqAbs(strategy.balanceOf(address(maatVault)), amountToDeposit - amountToWithdraw, potentialLoss);
         assertApproxEqAbs(
-            strategy.balanceOf(address(maatVault)),
-            amountToDeposit - amountToWithdraw,
-            potentialLoss
-        );
-        assertApproxEqAbs(
-            token.balanceOf(address(maatVault)),
-            randomBalance - amountToDeposit + amountToWithdraw,
-            potentialLoss
+            token.balanceOf(address(maatVault)), randomBalance - amountToDeposit + amountToWithdraw, potentialLoss
         );
     }
 
@@ -141,14 +109,10 @@ contract MaatVaultInternalFunctionsTesting is MaatVaultTestSetup {
         assertFalse(isActive);
 
         uint256 loss = 1 wei;
-        maatVault.withdrawFromStrategy(
-            strategyId, amount - loss, bytes32("intentionId")
-        );
+        maatVault.withdrawFromStrategy(strategyId, amount - loss, bytes32("intentionId"));
     }
 
-    function testFuzzing_Bridge(uint256 initialBalance, uint256 amountToBridge)
-        public
-    {
+    function testFuzz_Bridge(uint256 initialBalance, uint256 amountToBridge) public {
         vm.assume(initialBalance < 10 ** 50);
         vm.assume(amountToBridge < initialBalance);
 
@@ -156,9 +120,7 @@ contract MaatVaultInternalFunctionsTesting is MaatVaultTestSetup {
 
         maatVault.bridge(amountToBridge, 2, bytes32(0));
 
-        assertEq(
-            token.balanceOf(address(maatVault)), initialBalance - amountToBridge
-        );
+        assertEq(token.balanceOf(address(maatVault)), initialBalance - amountToBridge);
         assertEq(token.balanceOf(address(secondMaatVault)), amountToBridge);
     }
 }

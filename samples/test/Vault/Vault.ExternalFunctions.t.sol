@@ -13,20 +13,10 @@ contract MaatVaultExternalFunctionsTesting is MaatVaultTestSetup {
 
     function _afterSetUp() internal override {
         IStrategyFromStrategies.StrategyParams memory strategyParams =
-        IStrategyFromStrategies.StrategyParams(
-            chainId, "YEARN", 3, USDT, yearnUSDTVault
-        );
+            IStrategyFromStrategies.StrategyParams(chainId, "YEARN", 3, USDT, yearnUSDTVault);
 
-        secondStrategy = Strategy(
-            address(
-                new YearnV3Strategy(
-                    strategyParams,
-                    address(addressProvider),
-                    feeTo,
-                    performanceFee
-                )
-            )
-        );
+        secondStrategy =
+            Strategy(address(new YearnV3Strategy(strategyParams, address(addressProvider), feeTo, performanceFee)));
         secondStrategyId = secondStrategy.getStrategyId();
 
         addressProvider.addStrategy(address(secondStrategy));
@@ -34,7 +24,7 @@ contract MaatVaultExternalFunctionsTesting is MaatVaultTestSetup {
         maatVault.addStrategy(address(secondStrategy));
     }
 
-    function testFuzzingDepositFunction(uint256 assets) public {
+    function testFuzzDepositFunction(uint256 assets) public {
         vm.assume(assets <= strategy.maxDeposit(address(maatVault)));
         vm.assume(assets < 10 ** 60);
         vm.assume(assets > amountMin);
@@ -55,7 +45,7 @@ contract MaatVaultExternalFunctionsTesting is MaatVaultTestSetup {
         assertEq(shares, maatVault.previewDeposit(assets));
     }
 
-    function testFuzzingMintFunction(uint256 shares) public {
+    function testFuzzMintFunction(uint256 shares) public {
         vm.assume(shares < 10 ** 60);
         vm.assume(shares > amountMin);
 
@@ -74,7 +64,7 @@ contract MaatVaultExternalFunctionsTesting is MaatVaultTestSetup {
         assertEq(maatVault.balanceOf(user), shares);
     }
 
-    function testFuzzing_WithdrawFunction(uint256 assets) public {
+    function testFuzz_WithdrawFunction(uint256 assets) public {
         vm.assume(assets < 10 ** 60);
         vm.assume(assets > amountMin);
         address user = address(0x123456);
@@ -118,13 +108,11 @@ contract MaatVaultExternalFunctionsTesting is MaatVaultTestSetup {
         vm.stopPrank();
 
         vm.prank(notowner);
-        vm.expectRevert(
-            abi.encodeWithSelector(Vault.UnauthorizedUser.selector, notowner)
-        );
+        vm.expectRevert(abi.encodeWithSelector(Vault.UnauthorizedUser.selector, notowner));
         maatVault.withdraw(assets, owner, owner);
     }
 
-    function testFuzzing_RedeemFunction(uint256 shares) public {
+    function testFuzz_RedeemFunction(uint256 shares) public {
         vm.assume(shares < 10 ** 60);
         vm.assume(shares > amountMin);
 
@@ -170,13 +158,11 @@ contract MaatVaultExternalFunctionsTesting is MaatVaultTestSetup {
         vm.stopPrank();
 
         vm.prank(notowner);
-        vm.expectRevert(
-            abi.encodeWithSelector(Vault.UnauthorizedUser.selector, notowner)
-        );
+        vm.expectRevert(abi.encodeWithSelector(Vault.UnauthorizedUser.selector, notowner));
         maatVault.redeem(shares, owner, owner);
     }
 
-    function testFuzzingExecution(
+    function testFuzzExecution(
         uint256 _amountInFirst,
         uint256 _amountOutFirst,
         uint256 _amountInSecond,
@@ -189,9 +175,7 @@ contract MaatVaultExternalFunctionsTesting is MaatVaultTestSetup {
 
         vm.assume(_amountInFirst + _amountInSecond < depositLimit);
         vm.assume(_amountInFirst < 10 ** 50 && _amountOutFirst < _amountInFirst);
-        vm.assume(
-            _amountInSecond < 10 ** 50 && _amountOutSecond < _amountInSecond
-        );
+        vm.assume(_amountInSecond < 10 ** 50 && _amountOutSecond < _amountInSecond);
         vm.assume(_amountOutFirst > 0 && _amountOutSecond > 0);
 
         deal(
@@ -209,21 +193,12 @@ contract MaatVaultExternalFunctionsTesting is MaatVaultTestSetup {
         actions[2] = deposit;
         actions[3] = withdraw;
 
-        IExecutor.ActionInput[] memory actionData =
-            new IExecutor.ActionInput[](4);
+        IExecutor.ActionInput[] memory actionData = new IExecutor.ActionInput[](4);
 
-        actionData[0] = IExecutor.ActionInput({
-            dstEid: 0,
-            strategyId: strategyId,
-            amount: _amountInFirst,
-            intentionId: bytes32(0)
-        });
-        actionData[1] = IExecutor.ActionInput({
-            dstEid: 0,
-            strategyId: strategyId,
-            amount: _amountOutFirst,
-            intentionId: bytes32(0)
-        });
+        actionData[0] =
+            IExecutor.ActionInput({dstEid: 0, strategyId: strategyId, amount: _amountInFirst, intentionId: bytes32(0)});
+        actionData[1] =
+            IExecutor.ActionInput({dstEid: 0, strategyId: strategyId, amount: _amountOutFirst, intentionId: bytes32(0)});
 
         actionData[2] = IExecutor.ActionInput({
             dstEid: 0,
@@ -245,29 +220,20 @@ contract MaatVaultExternalFunctionsTesting is MaatVaultTestSetup {
 
         assertEq(
             token.balanceOf(address(maatVault)),
-            balance - (_amountInFirst + _amountInSecond)
-                + (_amountOutFirst + _amountOutSecond)
+            balance - (_amountInFirst + _amountInSecond) + (_amountOutFirst + _amountOutSecond)
         );
 
         uint256 maxLoss = 5 wei;
         uint256 assets = strategy.maxWithdraw(address(maatVault));
         uint256 diff = _amountInFirst - _amountOutFirst;
 
-        assertApproxEqAbs(
-            assets,
-            diff,
-            maxLoss,
-            "First Deposit&Withdraw calculation error resulted in more then 2 wei"
-        );
+        assertApproxEqAbs(assets, diff, maxLoss, "First Deposit&Withdraw calculation error resulted in more then 2 wei");
 
         assets = secondStrategy.maxWithdraw(address(maatVault));
         diff = _amountInSecond - _amountOutSecond;
 
         assertApproxEqAbs(
-            assets,
-            diff,
-            maxLoss,
-            "Second Deposit&Withdraw calculation error resulted in more then 2 wei"
+            assets, diff, maxLoss, "Second Deposit&Withdraw calculation error resulted in more then 2 wei"
         );
     }
 
@@ -290,7 +256,7 @@ contract MaatVaultExternalFunctionsTesting is MaatVaultTestSetup {
         assertEq(token.balanceOf(address(maatVault)), amountToDeposit);
     }
 
-    function testFuzzing_Deposit_WithCustomPPS(uint256 assets) public {
+    function testFuzz_Deposit_WithCustomPPS(uint256 assets) public {
         uint112 pps = 232332112;
 
         address receiver = address(0x1306);
@@ -317,16 +283,12 @@ contract MaatVaultExternalFunctionsTesting is MaatVaultTestSetup {
         maatVault.deposit(assets, receiver);
         vm.stopPrank();
 
-        assertEq(
-            maatVault.balanceOf(receiver),
-            predictedShares,
-            "Shares is not correct"
-        );
+        assertEq(maatVault.balanceOf(receiver), predictedShares, "Shares is not correct");
         assertEq(token.balanceOf(buyer), 0);
         assertEq(token.balanceOf(address(maatVault)), assets);
     }
 
-    function testFuzzing_Withdraw_WithCustomPPS(uint256 shares) public {
+    function testFuzz_Withdraw_WithCustomPPS(uint256 shares) public {
         uint112 pps = 232332112;
 
         address receiver = address(0x1306);
@@ -359,10 +321,7 @@ contract MaatVaultExternalFunctionsTesting is MaatVaultTestSetup {
 
         assertEq(maatVault.balanceOf(owner), 0, "Shares is not correct");
         assertEq(token.balanceOf(owner), 0);
-        assertEq(
-            token.balanceOf(address(maatVault)),
-            balanceBefore - predictedAmountOut
-        );
+        assertEq(token.balanceOf(address(maatVault)), balanceBefore - predictedAmountOut);
         assertEq(token.balanceOf(address(receiver)), predictedAmountOut);
     }
 

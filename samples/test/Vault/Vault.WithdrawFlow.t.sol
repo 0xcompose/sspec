@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import "./_.Vault.Setup.sol";
 import {StargateAdapterMock} from "../mock/StargateAdapterMock.sol";
 
-contract MaatVaultWithdrawFlowTesting is MaatVaultTestSetup {
+contract WithdrawFlow is MaatVaultTestSetup {
     address owner = address(0x12854888);
     address receiver = address(0xdddd);
 
@@ -19,13 +19,7 @@ contract MaatVaultWithdrawFlowTesting is MaatVaultTestSetup {
         addressProvider.changeStargateAdapter(address(stargateAdapter));
 
         secondMaatVault = new MaatVaultHarness(
-            address(this),
-            address(token),
-            amountMin,
-            address(addressProvider),
-            commander,
-            watcher,
-            2
+            address(this), address(token), amountMin, address(addressProvider), commander, watcher, 2
         );
 
         uint32[] memory eids = new uint32[](1);
@@ -56,9 +50,7 @@ contract MaatVaultWithdrawFlowTesting is MaatVaultTestSetup {
         oracle.updateGlobalPPS(vaultsArray, ppsArray);
     }
 
-    function testFuzzing_RequestWithdraw_CreatingRequest(
-        uint256 sharesToWithdraw
-    ) public {
+    function testFuzz_RequestWithdraw_CreatingRequest(uint256 sharesToWithdraw) public {
         vm.assume(sharesToWithdraw <= 10 ** 40);
         vm.assume(sharesToWithdraw > amountMin);
 
@@ -68,17 +60,11 @@ contract MaatVaultWithdrawFlowTesting is MaatVaultTestSetup {
         maatVault.setNonce(0);
         vm.expectEmit(address(maatVault));
         emit IWithdrawRequestLogic.WithdrawalRequested(
-            sharesToWithdraw,
-            maatVault.previewRedeem(sharesToWithdraw),
-            owner,
-            maatVault.getIntentionId(0),
-            1
+            sharesToWithdraw, maatVault.previewRedeem(sharesToWithdraw), owner, maatVault.getIntentionId(0), 1
         );
-        bytes32 intentionId =
-            maatVault.requestWithdraw(sharesToWithdraw, 1, owner, receiver);
+        bytes32 intentionId = maatVault.requestWithdraw(sharesToWithdraw, 1, owner, receiver);
 
-        IMaatVaultV1.WithdrawRequestInfo memory request =
-            maatVault.getWithdrawRequest(intentionId);
+        IMaatVaultV1.WithdrawRequestInfo memory request = maatVault.getWithdrawRequest(intentionId);
 
         assertEq(request.owner, owner, "Owner address failed");
         assertEq(request.receiver, receiver, "Receiver address failed");
@@ -86,16 +72,10 @@ contract MaatVaultWithdrawFlowTesting is MaatVaultTestSetup {
         assertEq(request.creationTime, block.timestamp, "Creation time failed");
         assertEq(request.shares, sharesToWithdraw, "Amount of shares failed");
 
-        assertEq(
-            maatVault.balanceOf(address(maatVault)),
-            sharesToWithdraw,
-            "Balance of shares on MaatVaultV1 failed"
-        );
+        assertEq(maatVault.balanceOf(address(maatVault)), sharesToWithdraw, "Balance of shares on MaatVaultV1 failed");
 
         assertEq(
-            maatVault.balanceOf(owner),
-            initialBalanceShares - sharesToWithdraw,
-            "Balance of shares of owner failed"
+            maatVault.balanceOf(owner), initialBalanceShares - sharesToWithdraw, "Balance of shares of owner failed"
         );
     }
 
@@ -144,9 +124,7 @@ contract MaatVaultWithdrawFlowTesting is MaatVaultTestSetup {
         vm.stopPrank();
 
         vm.prank(notowner);
-        vm.expectRevert(
-            abi.encodeWithSelector(Vault.UnauthorizedUser.selector, notowner)
-        );
+        vm.expectRevert(abi.encodeWithSelector(Vault.UnauthorizedUser.selector, notowner));
         maatVault.requestWithdraw(assets, 1, owner, owner);
     }
 
@@ -156,28 +134,20 @@ contract MaatVaultWithdrawFlowTesting is MaatVaultTestSetup {
 
         maatVault.approve(address(maatVault), sharesToWithdraw);
 
-        bytes32 intentionId =
-            maatVault.requestWithdraw(sharesToWithdraw, 1, owner, receiver);
+        bytes32 intentionId = maatVault.requestWithdraw(sharesToWithdraw, 1, owner, receiver);
 
         vm.stopPrank();
 
         vm.startPrank(commander);
 
-        IExecutor.ActionType fulfillWithdrawRequest =
-            IExecutor.ActionType.FULFILL_WITHDRAW_REQUEST;
+        IExecutor.ActionType fulfillWithdrawRequest = IExecutor.ActionType.FULFILL_WITHDRAW_REQUEST;
 
         IExecutor.ActionType[] memory actions = new IExecutor.ActionType[](1);
         actions[0] = fulfillWithdrawRequest;
 
-        IExecutor.ActionInput[] memory actionData =
-            new IExecutor.ActionInput[](1);
+        IExecutor.ActionInput[] memory actionData = new IExecutor.ActionInput[](1);
 
-        actionData[0] = IExecutor.ActionInput({
-            dstEid: 0,
-            strategyId: bytes32(0),
-            amount: 0,
-            intentionId: intentionId
-        });
+        actionData[0] = IExecutor.ActionInput({dstEid: 0, strategyId: bytes32(0), amount: 0, intentionId: intentionId});
         uint256 totalSupplyBefore = maatVault.totalSupply();
         uint256 balanceReceiverBefore = token.balanceOf(receiver);
         uint256 predictedAmountOut = maatVault.previewRedeem(sharesToWithdraw);
@@ -186,19 +156,11 @@ contract MaatVaultWithdrawFlowTesting is MaatVaultTestSetup {
 
         uint256 totalSupplyAfter = maatVault.totalSupply();
 
-        assertTrue(
-            totalSupplyAfter < totalSupplyBefore,
-            "Total supply assertion failed"
-        );
-        assertEq(
-            balanceReceiverBefore + predictedAmountOut,
-            token.balanceOf(receiver),
-            "Tokens are not delivered"
-        );
+        assertTrue(totalSupplyAfter < totalSupplyBefore, "Total supply assertion failed");
+        assertEq(balanceReceiverBefore + predictedAmountOut, token.balanceOf(receiver), "Tokens are not delivered");
 
         vm.expectRevert("MaatVaultV1: Request not found");
-        IMaatVaultV1.WithdrawRequestInfo memory request =
-            maatVault.getWithdrawRequest(intentionId);
+        IMaatVaultV1.WithdrawRequestInfo memory request = maatVault.getWithdrawRequest(intentionId);
     }
 
     function test_FulfillWithdrawRequest_WithBridge() public {
@@ -207,28 +169,20 @@ contract MaatVaultWithdrawFlowTesting is MaatVaultTestSetup {
 
         maatVault.approve(address(maatVault), sharesToWithdraw);
 
-        bytes32 intentionId =
-            maatVault.requestWithdraw(sharesToWithdraw, 2, owner, receiver);
+        bytes32 intentionId = maatVault.requestWithdraw(sharesToWithdraw, 2, owner, receiver);
 
         vm.stopPrank();
 
         vm.startPrank(commander);
 
-        IExecutor.ActionType fulfillWithdrawRequest =
-            IExecutor.ActionType.FULFILL_WITHDRAW_REQUEST;
+        IExecutor.ActionType fulfillWithdrawRequest = IExecutor.ActionType.FULFILL_WITHDRAW_REQUEST;
 
         IExecutor.ActionType[] memory actions = new IExecutor.ActionType[](1);
         actions[0] = fulfillWithdrawRequest;
 
-        IExecutor.ActionInput[] memory actionData =
-            new IExecutor.ActionInput[](1);
+        IExecutor.ActionInput[] memory actionData = new IExecutor.ActionInput[](1);
 
-        actionData[0] = IExecutor.ActionInput({
-            dstEid: 0,
-            strategyId: bytes32(0),
-            amount: 0,
-            intentionId: intentionId
-        });
+        actionData[0] = IExecutor.ActionInput({dstEid: 0, strategyId: bytes32(0), amount: 0, intentionId: intentionId});
         uint256 totalSupplyBefore = maatVault.totalSupply();
         uint256 balanceReceiverBefore = token.balanceOf(receiver);
         uint256 predictedAmountOut = maatVault.previewRedeem(sharesToWithdraw);
@@ -238,20 +192,12 @@ contract MaatVaultWithdrawFlowTesting is MaatVaultTestSetup {
 
         uint256 totalSupplyAfter = maatVault.totalSupply();
 
-        assertTrue(
-            totalSupplyAfter < totalSupplyBefore,
-            "Total supply assertion failed"
-        );
-        assertEq(
-            balanceReceiverBefore + predictedAmountOut,
-            token.balanceOf(receiver),
-            "Tokens are not delivered"
-        );
+        assertTrue(totalSupplyAfter < totalSupplyBefore, "Total supply assertion failed");
+        assertEq(balanceReceiverBefore + predictedAmountOut, token.balanceOf(receiver), "Tokens are not delivered");
 
         assertEq(idleBefore - predictedAmountOut, maatVault.idle());
 
         vm.expectRevert("MaatVaultV1: Request not found");
-        IMaatVaultV1.WithdrawRequestInfo memory request =
-            maatVault.getWithdrawRequest(intentionId);
+        IMaatVaultV1.WithdrawRequestInfo memory request = maatVault.getWithdrawRequest(intentionId);
     }
 }

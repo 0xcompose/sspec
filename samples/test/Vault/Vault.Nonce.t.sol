@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import "./_.Vault.Setup.sol";
 
-contract MaatVaultNonceTesting is MaatVaultTestSetup {
+contract Nonce is MaatVaultTestSetup {
     address owner = address(0x12854888);
     address receiver = address(0xdddd);
 
@@ -14,13 +14,7 @@ contract MaatVaultNonceTesting is MaatVaultTestSetup {
 
     function _afterSetUp() internal override {
         secondMaatVault = new MaatVaultHarness(
-            address(this),
-            address(token),
-            amountMin,
-            address(addressProvider),
-            commander,
-            watcher,
-            1
+            address(this), address(token), amountMin, address(addressProvider), commander, watcher, 1
         );
 
         addressProvider.addVault(address(secondMaatVault));
@@ -70,11 +64,9 @@ contract MaatVaultNonceTesting is MaatVaultTestSetup {
         vm.startPrank(owner);
         maatVault.approve(address(maatVault), 10 * sharesToWithdraw);
 
-        bytes32 intentionId1 =
-            maatVault.requestWithdraw(sharesToWithdraw, 1, owner, receiver);
+        bytes32 intentionId1 = maatVault.requestWithdraw(sharesToWithdraw, 1, owner, receiver);
 
-        bytes32 intentionId2 =
-            maatVault.requestWithdraw(sharesToWithdraw, 1, owner, receiver);
+        bytes32 intentionId2 = maatVault.requestWithdraw(sharesToWithdraw, 1, owner, receiver);
 
         assertFalse(intentionId1 == intentionId2);
     }
@@ -86,12 +78,9 @@ contract MaatVaultNonceTesting is MaatVaultTestSetup {
         maatVault.approve(address(maatVault), 10 * sharesToWithdraw);
         secondMaatVault.approve(address(secondMaatVault), 10 * sharesToWithdraw);
 
-        bytes32 intentionId1 =
-            maatVault.requestWithdraw(sharesToWithdraw, 1, owner, receiver);
+        bytes32 intentionId1 = maatVault.requestWithdraw(sharesToWithdraw, 1, owner, receiver);
 
-        bytes32 intentionId2 = secondMaatVault.requestWithdraw(
-            sharesToWithdraw, 1, owner, receiver
-        );
+        bytes32 intentionId2 = secondMaatVault.requestWithdraw(sharesToWithdraw, 1, owner, receiver);
 
         assertFalse(intentionId1 == intentionId2);
     }

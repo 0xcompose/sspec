@@ -31,7 +31,7 @@ contract MaatVaultCancelWithdrawTesting is MaatVaultTestSetup {
         oracle.updateGlobalPPS(vaultsArray, ppsArray);
     }
 
-    function test_FuzzingCancellingWithdraw(uint256 sharesToWithdraw) public {
+    function test_FuzzCancellingWithdraw(uint256 sharesToWithdraw) public {
         vm.assume(sharesToWithdraw <= 10 ** 40);
         vm.assume(sharesToWithdraw > amountMin);
 
