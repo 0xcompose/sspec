@@ -8,7 +8,7 @@ Such functionality helps not only understanding your own suites of tests, but al
 
 Built using [slang](https://github.com/NomicFoundation/slang).
 
-## Foundry Test Naming According to SSPEC
+## Foundry Test Naming According to `sspec`
 
 There are three valid naming conventions for unit testing (according to foundry best practice):
 1. `SourceContractName.t.sol`, where test contract is named `SourceContractNameTest`
