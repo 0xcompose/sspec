@@ -1,18 +1,12 @@
 import { SolidityFile } from "../utils/files.mjs"
 import { isSourceFunction } from "../utils/utils.mjs"
 import warningSystem from "../warning.mjs"
-import {
-	ScopeType,
-	SourceContracts,
-	TestFileScope,
-	TestFunctionScope,
-} from "./types.mjs"
+import { ScopeType, TestFileScope, TestFunctionScope } from "./types.mjs"
 
 export function getTestFunctionScope(
 	file: SolidityFile,
 	functionName: string,
 	testFileScope: TestFileScope,
-	sourceContracts: SourceContracts,
 ): TestFunctionScope {
 	const unknownScope: TestFunctionScope = {
 		type: ScopeType.Unknown,
@@ -25,10 +19,8 @@ export function getTestFunctionScope(
 	if (testFileScope.type === ScopeType.Contract) {
 		// Function's scope is ALWAYS function
 
-		const sourceFunctionName = getSourceFunctionNameFromTestName(
-			functionName,
-			sourceContracts,
-		)
+		const sourceFunctionName =
+			getSourceFunctionNameFromTestName(functionName)
 
 		if (!sourceFunctionName) {
 			warnAboutInvalidFunctionName(functionName, file)
@@ -48,19 +40,9 @@ export function getTestFunctionScope(
 	if (testFileScope.type === ScopeType.Function) {
 		// Function's scope is ALWAYS function
 
-		const sourceFunctionName = getSourceFunctionNameFromTestName(
-			functionName,
-			sourceContracts,
-		)
-
-		if (!sourceFunctionName) {
-			warnAboutInvalidFunctionName(functionName, file)
-			return unknownScope
-		}
-
 		return {
 			type: ScopeType.Function,
-			target: sourceFunctionName,
+			target: testFileScope.target,
 		}
 	}
 
@@ -70,10 +52,8 @@ export function getTestFunctionScope(
 
 	if (testFileScope.type === ScopeType.Feature) {
 		// Function's scope is EITHER function OR feature
-		const sourceFunctionName = getSourceFunctionNameFromTestName(
-			functionName,
-			sourceContracts,
-		)
+		const sourceFunctionName =
+			getSourceFunctionNameFromTestName(functionName)
 
 		if (!sourceFunctionName) {
 			// Feature scope
@@ -98,9 +78,8 @@ export function getTestFunctionScope(
 	return unknownScope
 }
 
-function getSourceFunctionNameFromTestName(
+export function getSourceFunctionNameFromTestName(
 	functionName: string,
-	sourceContracts: SourceContracts,
 ): string | undefined {
 	if (!functionName) {
 		return undefined
@@ -133,7 +112,7 @@ function getSourceFunctionNameFromTestName(
 
 	const extractedName = match[1]
 
-	if (!isSourceFunction(extractedName, sourceContracts)) {
+	if (!isSourceFunction(extractedName)) {
 		return undefined
 	}
 

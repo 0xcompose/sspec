@@ -8,6 +8,8 @@ import {
 	TestFile,
 	TestFunction,
 } from "../parse/types.mjs"
+import { getSourceFunctionNameFromTestName } from "../parse/testFunctionScope.mjs"
+import { isSourceFunction } from "../utils/utils.mjs"
 
 type ReportSection = {
 	functions: Map<FunctionName, TestFunction[]>
@@ -133,7 +135,9 @@ function getTestDescriptionFromName(test: TestFunction): string {
 		return `\x1b[33m${test.name}\x1b[0m`
 	}
 
-	const regexp = /^test(Fork)?(Fuzz)?(_Revert(If|When|On))?_(\w+)*$/
+	// TODO: unify regexps across the codebase
+	const regexp =
+		/^test(Fork)?(Fuzz)?(_[a-z][A-Z]+)?(_Revert(If|When|On))?_\w+$/
 
 	if (!regexp.test(test.name)) {
 		warningSystem.addWarning(
@@ -144,15 +148,15 @@ function getTestDescriptionFromName(test: TestFunction): string {
 
 	let readableTestName = getReadableTestDescription(test.name)
 
-	if (test.scope.type === ScopeType.Function) {
-		const functionNamePattern = new RegExp(
-			`\\b${test.scope.target}\\b`,
-			"i",
-		)
-		readableTestName = readableTestName
-			.replace(functionNamePattern, "")
-			.trim()
-	}
+	// if (test.scope.type === ScopeType.Function) {
+	// 	const functionNamePattern = new RegExp(
+	// 		`\\b${test.scope.target}\\b`,
+	// 		"i",
+	// 	)
+	// 	readableTestName = readableTestName
+	// 		.replace(functionNamePattern, "")
+	// 		.trim()
+	// }
 
 	return /revert/i.test(test.name)
 		? `\x1b[31m${readableTestName}\x1b[0m`
@@ -160,14 +164,24 @@ function getTestDescriptionFromName(test: TestFunction): string {
 }
 
 function getReadableTestDescription(testName: string): string {
-	return testName
+	let testNameParts = testName
 		.replace(/^(test(Fork)?(Fuzz)?_)/, "")
 		.split("_")
-		.map((part) =>
-			part
-				.replace(/([a-z])([A-Z])/g, "$1 $2")
-				.replace(/([A-Z]+)([A-Z][a-z])/g, "$1 $2"),
-		)
-		.join(" ")
-		.trim()
+
+	const sourceFunction = isSourceFunction(testNameParts[0])
+		? testNameParts.shift() + "()"
+		: ""
+
+	return (
+		sourceFunction +
+		" " +
+		testNameParts
+			.map((part) =>
+				part
+					.replace(/([a-z])([A-Z])/g, "$1 $2")
+					.replace(/([A-Z]+)([A-Z][a-z])/g, "$1 $2"),
+			)
+			.join(" ")
+			.trim()
+	).trim()
 }

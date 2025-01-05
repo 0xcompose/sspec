@@ -2,6 +2,7 @@ import { Cursor, Query } from "@nomicfoundation/slang/cst"
 import { SolidityFile } from "./files.mjs"
 import warningSystem from "../warning.mjs"
 import { SourceContracts } from "../parse/types.mjs"
+import sourceContractsSingleton from "../parse/sourceContractsSingleton.mjs"
 export const DEFAULT_SOLIDITY_VERSION = "0.8.22"
 
 export function extractSolidityVersion(source: string): string {
@@ -65,10 +66,9 @@ export function isTestFunction(functionName: string): boolean {
 	return functionName.startsWith("test")
 }
 
-export function isSourceFunction(
-	supposedSourceFunctionName: string,
-	sourceContracts: SourceContracts,
-): boolean {
+export function isSourceFunction(supposedSourceFunctionName: string): boolean {
+	const sourceContracts = sourceContractsSingleton.getSourceContracts()
+
 	for (const [, functions] of sourceContracts) {
 		if (functions.includes(supposedSourceFunctionName)) {
 			return true

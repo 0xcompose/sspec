@@ -5,7 +5,7 @@ import {
 	isTestFunction,
 } from "../utils/utils.mjs"
 import { checkIfFileHasMultipleContracts } from "../validation/noMultipleContracts.mjs"
-import { getTestFunctionScope } from "./testFunction.mjs"
+import { getTestFunctionScope } from "./testFunctionScope.mjs"
 import { getTestFileScope } from "./testFileScope.mjs"
 import { SourceContracts, TestFile, TestFileScope } from "./types.mjs"
 import { SolidityFile } from "../utils/files.mjs"
@@ -15,7 +15,6 @@ import path from "path"
 // Function to parse a Solidity file and extract function names
 export function parseSolidityTestFile(
 	file: SolidityFile,
-	parsedSource: SourceContracts,
 ): TestFile | undefined {
 	const parseOutput = parseSolidityFile(file)
 	if (!parseOutput) return
@@ -24,10 +23,10 @@ export function parseSolidityTestFile(
 
 	validateFile(file, cursor)
 
-	const testFileScope = getTestFileScope(file, cursor, parsedSource)
+	const testFileScope = getTestFileScope(file, cursor)
 
 	const testFile = initializeTestFile(file, testFileScope, cursor)
-	populateTestFunctions(testFile, file, testFileScope, cursor, parsedSource)
+	populateTestFunctions(testFile, file, testFileScope, cursor)
 	console.log(JSON.stringify(testFile, null, 4))
 	return testFile
 }
@@ -58,7 +57,6 @@ function populateTestFunctions(
 	file: SolidityFile,
 	testFileScope: TestFileScope,
 	cursor: Cursor,
-	parsedSource: SourceContracts,
 ) {
 	const query = Query.parse(
 		"[FunctionDefinition [FunctionName @function_name [Identifier]]]",
@@ -77,12 +75,7 @@ function populateTestFunctions(
 
 		testFile.tests.push({
 			name: functionName,
-			scope: getTestFunctionScope(
-				file,
-				functionName,
-				testFileScope,
-				parsedSource,
-			),
+			scope: getTestFunctionScope(file, functionName, testFileScope),
 		})
 	}
 }

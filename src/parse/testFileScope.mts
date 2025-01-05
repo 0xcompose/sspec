@@ -16,6 +16,7 @@ import {
 } from "./types.mjs"
 import { SolidityFile } from "../utils/files.mjs"
 import { Cursor } from "@nomicfoundation/slang/cst"
+import sourceContractsSingleton from "./sourceContractsSingleton.mjs"
 
 // There are three valid naming conventions for unit testing (according to foundry best practice):
 // 1. `SourceContractName.t.sol`, where test contract is named `SourceContractNameTest`
@@ -24,9 +25,10 @@ import { Cursor } from "@nomicfoundation/slang/cst"
 export function getTestFileScope(
 	testFile: SolidityFile,
 	cursor: Cursor,
-	sourceContracts: SourceContracts,
 ): TestFileScope {
 	const unknownScope: TestFileScope = { type: ScopeType.Unknown }
+
+	const sourceContracts = sourceContractsSingleton.getSourceContracts()
 
 	const [sourceContractName, secondPart, testIdentifier, extension] = path
 		.basename(testFile.filePath)
@@ -60,7 +62,7 @@ export function getTestFileScope(
 	// Check if it's a function-level test file
 	if (
 		toCamelCase(testContractName) === secondPart &&
-		isSourceFunction(secondPart, sourceContracts)
+		isSourceFunction(secondPart)
 	) {
 		return {
 			type: ScopeType.Function,
