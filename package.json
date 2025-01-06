@@ -1,6 +1,6 @@
 {
 	"name": "@0xcompose/sspec",
-	"version": "1.0.2",
+	"version": "1.0.3",
 	"description": "Solidity Smart Contract specification generation tool based on Foundry tests and slang",
 	"main": "bin/src/index.mjs",
 	"bin": {
@@ -10,7 +10,7 @@
 		"start": "npx tsc && node bin/src/index.mjs ./samples/src/ ./samples/test/",
 		"test": "npx tsc && npx mocha bin/test/**",
 		"format": "prettier --write .",
-		"update": "npx tsc && chmod +x bin/src/index.mjs && npm link"
+		"update": "npx tsc && yarn publish --access public"
 	},
 	"keywords": [
 		"solidity",
