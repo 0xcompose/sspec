@@ -3,6 +3,7 @@ import { SolidityFile } from "./files.mjs"
 import warningSystem from "../warning.mjs"
 import { SourceContracts } from "../parse/types.mjs"
 import sourceContractsSingleton from "../parse/sourceContractsSingleton.mjs"
+import path from "path"
 export const DEFAULT_SOLIDITY_VERSION = "0.8.22"
 
 export function extractSolidityVersion(source: string): string {
@@ -47,12 +48,15 @@ export function isSetupFile(file: SolidityFile): boolean {
 }
 
 export function isUtilsFile(file: SolidityFile): boolean {
+	const name = path.basename(file.filePath)
 	return (
-		file.filePath.includes("Helper") ||
-		file.filePath.includes("Utils") ||
-		file.filePath.includes("Util") ||
-		file.filePath.includes("Mock") ||
-		file.filePath.includes("Harness")
+		file.filePath.includes("utils") ||
+		file.filePath.includes("util") ||
+		name.includes("Helper") ||
+		name.includes("Utils") ||
+		name.includes("Util") ||
+		name.includes("Mock") ||
+		name.includes("Harness")
 	)
 }
 
