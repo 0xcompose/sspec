@@ -27,7 +27,7 @@ export function parseSolidityTestFile(
 
 	const testFile = initializeTestFile(file, testFileScope, cursor)
 	populateTestFunctions(testFile, file, testFileScope, cursor)
-	console.log(JSON.stringify(testFile, null, 4))
+
 	return testFile
 }
 

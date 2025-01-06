@@ -33,7 +33,9 @@ export function main(sourceDirectory: string, testDirectory: string) {
 
 	reportTests(parsedSource, parsedTestFiles)
 
+	console.log("\n")
 	console.timeEnd("Total Execution Time")
+	console.log("\n")
 }
 
 function analyzeTestFiles(testFiles: SolidityFile[]): TestFile[] {
