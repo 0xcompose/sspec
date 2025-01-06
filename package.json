@@ -1,6 +1,6 @@
 {
 	"name": "@0xcompose/sspec",
-	"version": "1.0.1",
+	"version": "1.0.2",
 	"description": "Solidity Smart Contract specification generation tool based on Foundry tests and slang",
 	"main": "bin/src/index.mjs",
 	"bin": {
