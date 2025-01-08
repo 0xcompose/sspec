@@ -12,6 +12,8 @@
 	},
 	"scripts": {
 		"start": "npx tsc && node bin/src/index.mjs ./samples/src/ ./samples/test/",
+		"start:help": "npx tsc && node bin/src/index.mjs ./samples/src/ ./samples/test/ --help",
+		"start:internal": "npx tsc && node bin/src/index.mjs ./samples/src/ ./samples/test/ --include-internal",
 		"test": "npx tsc && npx mocha bin/test/**",
 		"format": "prettier --write .",
 		"update": "npx tsc && yarn publish --access public"

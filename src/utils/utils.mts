@@ -104,3 +104,7 @@ export function toCamelCase(str: string): string {
 		)
 		.replace(/\s+/g, "")
 }
+
+export function isInternalOrPrivateFunction(functionName: string): boolean {
+	return functionName.startsWith("_")
+}

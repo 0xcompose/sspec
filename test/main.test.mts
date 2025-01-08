@@ -3,6 +3,11 @@ import { expect } from "chai"
 
 describe("Main Function", () => {
 	it("should run without errors", () => {
-		expect(() => main("./samples/src/", "./samples/test/")).not.to.throw()
+		const options = {
+			includeInternal: false,
+			srcDir: "./samples/src/",
+			testDir: "./samples/test/"
+		}
+		expect(() => main(options)).not.to.throw()
 	})
 })
