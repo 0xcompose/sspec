@@ -5,19 +5,20 @@ import { reportFilesFromTestFolder } from "./report/files.mjs"
 import { TestFile } from "./parse/types.mjs"
 import { findSolidityFiles, SolidityFile } from "./utils/files.mjs"
 import sourceContractsSingleton from "./parse/sourceContractsSingleton.mjs"
+import { CliOptions } from "./index.mjs"
 
 // Main function to parse all test files
-export function main(sourceDirectory: string, testDirectory: string) {
+export function main(options: CliOptions) {
 	console.time("Total Execution Time")
 
 	/* ============= PARSE SOURCE ============= */
 
-	sourceContractsSingleton.initialize(sourceDirectory)
+	sourceContractsSingleton.initialize(options.srcDir)
 	const parsedSource = sourceContractsSingleton.getSourceContracts()
 
 	/* ============= PARSE TESTS ============= */
 
-	const solidityFilesFromTestFolder = findSolidityFiles(testDirectory)
+	const solidityFilesFromTestFolder = findSolidityFiles(options.testDir)
 
 	const categorizedFiles = categorizeFilesFromTestFolder(
 		solidityFilesFromTestFolder,
@@ -31,7 +32,7 @@ export function main(sourceDirectory: string, testDirectory: string) {
 
 	const parsedTestFiles = analyzeTestFiles(testFiles)
 
-	reportTests(parsedSource, parsedTestFiles)
+	reportTests(parsedSource, parsedTestFiles, options.includeInternal)
 
 	console.log("\n")
 	console.timeEnd("Total Execution Time")

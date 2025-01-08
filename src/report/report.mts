@@ -9,7 +9,7 @@ import {
 	TestFunction,
 } from "../parse/types.mjs"
 import { getSourceFunctionNameFromTestName } from "../parse/testFunctionScope.mjs"
-import { isSourceFunction } from "../utils/utils.mjs"
+import { isInternalOrPrivateFunction, isSourceFunction } from "../utils/utils.mjs"
 
 type ReportSection = {
 	functions: Map<FunctionName, TestFunction[]>
@@ -34,10 +34,11 @@ type ContractReport = Map<ContractName, ReportSection>
 export function reportTests(
 	sourceContracts: SourceContracts,
 	testFiles: TestFile[],
+	includeInternal: boolean,
 ) {
 	const contracts = initializeContractsMap(sourceContracts)
 	populateReport(contracts, testFiles)
-	printContractsReport(contracts)
+	printContractsReport(contracts, includeInternal)
 }
 
 function initializeContractsMap(
@@ -58,7 +59,7 @@ function initializeContractsMap(
 
 function populateReport(
 	contracts: ContractReport,
-	testFiles: TestFile[],
+	testFiles: TestFile[]
 ): void {
 	for (const file of testFiles) {
 		const contractName = file.targetContract
@@ -92,7 +93,7 @@ function populateReport(
 	}
 }
 
-function printContractsReport(contracts: ContractReport): void {
+function printContractsReport(contracts: ContractReport, includeInternal: boolean): void {
 	console.log("\nSource Contracts Specification:")
 
 	for (const [contractName, section] of contracts) {
@@ -100,6 +101,10 @@ function printContractsReport(contracts: ContractReport): void {
 
 		// Print functions
 		for (const [functionName, tests] of section.functions) {
+			if (!includeInternal && isInternalOrPrivateFunction(functionName)) {
+				continue
+			}
+
 			if (tests.length === 0) {
 				console.log(`  ├── \x1b[31m${functionName}\x1b[0m`)
 				continue
