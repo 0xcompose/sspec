@@ -1,6 +1,6 @@
 {
 	"name": "@0xcompose/sspec",
-	"version": "1.0.6",
+	"version": "1.0.7",
 	"description": "Solidity Smart Contract specification generation tool based on Foundry tests and slang",
 	"main": "bin/src/index.mjs",
 	"files": [
@@ -34,6 +34,7 @@
 		"@types/chai": "^5.0.1",
 		"@types/mocha": "^10.0.10",
 		"chai": "^5.1.2",
+		"chalk": "^5.4.1",
 		"mocha": "^11.0.1",
 		"mocha-suppress-logs": "^0.5.1"
 	},
