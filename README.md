@@ -1,14 +1,14 @@
 # sspec
 
-sspec comes from `Solidity SPECification`. Often smart contract repos lack detailed of even general description of what repo and smart contracts in it are doing. Only AIs can understand what's going (not always). So for sake of development and review simplicity this tool was created.
+sspec comes from `Solidity SPECification`. Smart contract repositories often lack detailed or even general descriptions of what the repo and its smart contracts do. Only AIs can understand what's going on (not always). This tool was created to improve development and review simplicity.
 
-This is a re-imagined of [`scopelint`'s](https://github.com/ScopeLift/scopelint) `spec` command, which generated specification for source smart contracts based on test files and test names.
+This is a reimagining of [`scopelint`'s](https://github.com/ScopeLift/scopelint) `spec` command, which generates specifications for source smart contracts based on test files and test names.
 
-Such functionality helps not only understanding your own suites of tests, but also review other's repos.
+This functionality helps not only with understanding your own test suites, but also with reviewing other repositories.
 
 Built using [slang](https://github.com/NomicFoundation/slang).
 
-## Usage
+## Installation
 
 Install via npm or yarn:
 
@@ -20,9 +20,19 @@ npm i @0xcompose/sspec --save-dev
 yarn add @0xcompose/sspec --dev
 ```
 
-## Foundry Test Naming According to `sspec`
+## Foundry Test Naming Conventions
 
-There are three valid naming conventions for unit testing (according to foundry best practice):
-1. `SourceContractName.t.sol`, where test contract is named `SourceContractNameTest`
-2. `SourceContractName.sourceFunctionName.t.sol`, where test contract is named `SourceFunctionName` with pascal case
-3. `SourceContractName.FeatureName.t.sol`, where test contract is named `FeatureName`. It is not required to be actual feature, feature can be anything, including integration tests
+There are three valid naming conventions for unit testing (according to Foundry best practices):
+
+1. Testing whole contract:
+   - Test file: `SourceContractName.t.sol`
+   - Test contract: `SourceContractNameTest`
+
+2. Testing single function:
+   - Test file: `SourceContractName.sourceFunctionName.t.sol` 
+   - Test contract: `SourceFunctionName` (in PascalCase)
+
+3. Testing features:
+   - Test file: `SourceContractName.FeatureName.t.sol`
+   - Test contract: `FeatureName`
+   - Note: Feature can be anything, including integration tests
