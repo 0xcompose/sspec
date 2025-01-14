@@ -1,4 +1,4 @@
-import { Cursor, Query } from "@nomicfoundation/slang/cst"
+import { Cursor, Query, TextRange } from "@nomicfoundation/slang/cst"
 import { SolidityFile } from "./files.mjs"
 import warningSystem from "../warning.mjs"
 import { SourceContracts } from "../parse/types.mjs"
@@ -28,7 +28,7 @@ export function getContractName(file: SolidityFile, cursor: Cursor): string {
 	for (const match of matches) {
 		if (contractName.length != 0) {
 			warningSystem.addWarning(
-				`Multiple contracts found in ${file.filePath} (first found is used)`,
+				`Multiple contracts found in ${file.path} (first found is used)`,
 			)
 			break
 		}
@@ -40,18 +40,18 @@ export function getContractName(file: SolidityFile, cursor: Cursor): string {
 }
 
 export function isTestFile(file: SolidityFile): boolean {
-	return file.filePath.includes(".t.sol")
+	return file.path.includes(".t.sol")
 }
 
 export function isSetupFile(file: SolidityFile): boolean {
-	return file.filePath.includes("Setup")
+	return file.path.includes("Setup")
 }
 
 export function isUtilsFile(file: SolidityFile): boolean {
-	const name = path.basename(file.filePath)
+	const name = path.basename(file.path)
 	return (
-		file.filePath.includes("utils") ||
-		file.filePath.includes("util") ||
+		file.path.includes("utils") ||
+		file.path.includes("util") ||
 		name.includes("Helper") ||
 		name.includes("Utils") ||
 		name.includes("Util") ||

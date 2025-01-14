@@ -1,9 +1,9 @@
-import path from "path"
+import path, { ParsedPath } from "path"
 import fs from "fs"
 import { extractSolidityVersion } from "./utils.mjs"
 
 export interface SolidityFile {
-	filePath: string
+	path: string
 	version: string
 }
 
@@ -21,7 +21,7 @@ export function findSolidityFiles(dir: string): SolidityFile[] {
 			// read first line of file
 			const source = fs.readFileSync(file, "utf8")
 			const version = extractSolidityVersion(source)
-			results.push({ filePath: file, version })
+			results.push({ path: file, version })
 		}
 	})
 
@@ -29,10 +29,10 @@ export function findSolidityFiles(dir: string): SolidityFile[] {
 }
 
 export function readSolidityFile(file: SolidityFile): string {
-	if (!file.filePath.endsWith(".sol")) {
+	if (!file.path.endsWith(".sol")) {
 		throw new Error(
-			`Invalid file type. Expected .sol file but got: ${file.filePath}`,
+			`Invalid file type. Expected .sol file but got: ${file.path}`,
 		)
 	}
-	return fs.readFileSync(file.filePath, "utf8")
+	return fs.readFileSync(file.path, "utf8")
 }

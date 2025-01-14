@@ -21,7 +21,7 @@ export function checkIfFileHasMultipleContracts(
 
 	if (hasMultipleContracts) {
 		warningSystem.addError(
-			`File ${file.filePath} contains more than one contract.`,
+			`File ${file.path} contains more than one contract.`,
 		)
 	}
 
