@@ -195,13 +195,15 @@ function getReadableTestDescription(testName: string): string {
 		testNameParts
 			.map((part) =>
 				part
+					// Handles function names
 					.replace(/([a-z])([A-Z])/g, "$1 $2")
-					.replace(/([A-Z]+)([A-Z][a-z])/g, "$1 $2"),
+					// Handles sequences of capitals (like "PPS") as a single word
+					.replace(/([A-Z]+)([A-Z][a-z])/g, "$1 $2")
+					// Handles numbers as a single word
+					.replace(/(\d+)/g, " $1 ")
+					.trim(),
 			)
 			.join(" ")
 			.trim()
 	).trim()
-}
-function makeLink(path: string, range: unknown) {
-	throw new Error("Function not implemented.")
 }
