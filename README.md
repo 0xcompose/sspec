@@ -8,6 +8,18 @@ Such functionality helps not only understanding your own suites of tests, but al
 
 Built using [slang](https://github.com/NomicFoundation/slang).
 
+## Usage
+
+Install via npm or yarn:
+
+```bash
+npm i @0xcompose/sspec --save-dev
+```
+
+```bash
+yarn add @0xcompose/sspec --dev
+```
+
 ## Foundry Test Naming According to `sspec`
 
 There are three valid naming conventions for unit testing (according to foundry best practice):
