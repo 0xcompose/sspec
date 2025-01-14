@@ -7,7 +7,7 @@ import {
 import { checkIfFileHasMultipleContracts } from "../validation/noMultipleContracts.mjs"
 import { getTestFunctionScope } from "./testFunctionScope.mjs"
 import { getTestFileScope } from "./testFileScope.mjs"
-import { SourceContracts, TestFile, TestFileScope } from "./types.mjs"
+import { TestFile, TestFileScope } from "./types.mjs"
 import { SolidityFile } from "../utils/files.mjs"
 import { parseSolidityFile } from "./parse.mjs"
 import path from "path"
@@ -43,10 +43,10 @@ function initializeTestFile(
 	cursor: Cursor,
 ): TestFile {
 	return {
-		filePath: file.filePath,
+		file: file,
 		scope: testFileScope,
 		testContract: getContractName(file, cursor),
-		targetContract: path.basename(file.filePath).split(".")[0],
+		targetContract: path.basename(file.path).split(".")[0],
 		tests: [],
 		setUps: [],
 	}
@@ -64,7 +64,8 @@ function populateTestFunctions(
 	const matches = cursor.query([query])
 
 	for (const match of matches) {
-		const functionName = match.captures["function_name"]![0]!.node.unparse()
+		const capture = match.captures["function_name"]![0]!
+		const functionName = capture.node.unparse()
 
 		if (isSetupFunction(functionName)) {
 			testFile.setUps.push(functionName)
@@ -73,8 +74,14 @@ function populateTestFunctions(
 
 		if (!isTestFunction(functionName)) continue
 
+		const functionDefinition = capture.textRange
+
 		testFile.tests.push({
 			name: functionName,
+			definition: {
+				range: functionDefinition,
+				file: testFile.file,
+			},
 			scope: getTestFunctionScope(file, functionName, testFileScope),
 		})
 	}

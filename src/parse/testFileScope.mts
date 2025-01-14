@@ -4,14 +4,12 @@ import {
 	isSourceContract,
 	isSourceFunction,
 	toCamelCase,
-	toPascalCase,
 } from "../utils/utils.mjs"
 import warningSystem from "../warning.mjs"
 import {
 	FeatureName,
 	FunctionName,
 	ScopeType,
-	SourceContracts,
 	TestFileScope,
 } from "./types.mjs"
 import { SolidityFile } from "../utils/files.mjs"
@@ -31,7 +29,7 @@ export function getTestFileScope(
 	const sourceContracts = sourceContractsSingleton.getSourceContracts()
 
 	const [sourceContractName, secondPart, testIdentifier, extension] = path
-		.basename(testFile.filePath)
+		.basename(testFile.path)
 		.split(".")
 	const testContractName = getContractName(testFile, cursor)
 
@@ -84,6 +82,6 @@ export function getTestFileScope(
 
 function createErrorOnUnknownScope(testFile: SolidityFile) {
 	warningSystem.addError(
-		`Unable to determine scope for test file ${testFile.filePath}`,
+		`Unable to determine scope for test file ${testFile.path}`,
 	)
 }

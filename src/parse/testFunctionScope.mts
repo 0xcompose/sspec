@@ -72,7 +72,7 @@ export function getTestFunctionScope(
 
 	// Could not determine function scope
 	warningSystem.addWarning(
-		`Unable to determine scope for test ${functionName} in ${file.filePath}`,
+		`Unable to determine scope for test ${functionName} in ${file.path}`,
 	)
 
 	return unknownScope
@@ -124,6 +124,6 @@ function warnAboutInvalidFunctionName(
 	file: SolidityFile,
 ) {
 	warningSystem.addWarning(
-		`Unable to determine source function name for test ${functionName} in ${file.filePath}`,
+		`Unable to determine source function name for test ${functionName} in ${file.path}`,
 	)
 }

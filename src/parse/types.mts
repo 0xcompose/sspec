@@ -1,3 +1,6 @@
+import { TextRange } from "@nomicfoundation/slang/cst"
+import { SolidityFile } from "../utils/files.mjs"
+
 export type SourceContracts = Map<ContractName, FunctionName[]>
 
 export type FunctionName = string
@@ -25,7 +28,7 @@ export type TestFunctionScope = FunctionScope | FeatureScope | UnknownScope
 // Assumes there is only one contract in the file
 // otherwise throws an error
 export interface TestFile {
-	filePath: string
+	file: SolidityFile
 	testContract: ContractName
 	targetContract: ContractName
 	scope: TestFileScope
@@ -33,9 +36,15 @@ export interface TestFile {
 	setUps: string[] // setUp(), _setUp(), _afterSetup(), _beforeSetup()
 }
 
+export interface Definition {
+	file: SolidityFile
+	range: TextRange
+}
+
 // FunctionScope is usually expected to a Unit test for specific function, constructor or feature
 export interface TestFunction {
 	name: FunctionName
+	definition: Definition
 	scope: TestFunctionScope
 }
 

@@ -23,7 +23,7 @@ describe("Parse Source File", () => {
 
 	it("should parse the source file", () => {
 		const result = parseSoliditySourceFile({
-			filePath: "./samples/src/core/MaatVaultV1.sol",
+			path: "./samples/src/core/MaatVaultV1.sol",
 			version: singleSolidityVersion,
 		})
 
@@ -45,7 +45,7 @@ describe("Parse Source File", () => {
 
 	it("should parse functions in a contract", () => {
 		const result = parseSoliditySourceFile({
-			filePath: singleContractPath,
+			path: singleContractPath,
 			version: singleSolidityVersion,
 		})
 

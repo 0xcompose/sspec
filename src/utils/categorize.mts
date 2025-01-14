@@ -37,7 +37,7 @@ export function categorizeFilesFromTestFolder(
 
 	for (const file of utilsNamedAsTest) {
 		warningSystem.addError(
-			`${path.basename(file.filePath)} (${
+			`${path.basename(file.path)} (${
 				file.version
 			}) is named as a test file but is a utility file`,
 		)
@@ -45,7 +45,7 @@ export function categorizeFilesFromTestFolder(
 
 	for (const file of cloneFiles) {
 		warningSystem.addError(
-			`${path.basename(file.filePath)} (${
+			`${path.basename(file.path)} (${
 				file.version
 			}) was not identified as a test, setup or utility`,
 		)

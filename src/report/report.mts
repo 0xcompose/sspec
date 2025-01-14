@@ -8,8 +8,12 @@ import {
 	TestFile,
 	TestFunction,
 } from "../parse/types.mjs"
-import { getSourceFunctionNameFromTestName } from "../parse/testFunctionScope.mjs"
-import { isInternalOrPrivateFunction, isSourceFunction } from "../utils/utils.mjs"
+import {
+	isInternalOrPrivateFunction,
+	isSourceFunction,
+} from "../utils/utils.mjs"
+import chalk from "chalk"
+import { makeLinkToDefinition } from "../utils/links.mjs"
 
 type ReportSection = {
 	functions: Map<FunctionName, TestFunction[]>
@@ -59,7 +63,7 @@ function initializeContractsMap(
 
 function populateReport(
 	contracts: ContractReport,
-	testFiles: TestFile[]
+	testFiles: TestFile[],
 ): void {
 	for (const file of testFiles) {
 		const contractName = file.targetContract
@@ -93,7 +97,10 @@ function populateReport(
 	}
 }
 
-function printContractsReport(contracts: ContractReport, includeInternal: boolean): void {
+function printContractsReport(
+	contracts: ContractReport,
+	includeInternal: boolean,
+): void {
 	console.log("\nSource Contracts Specification:")
 
 	for (const [contractName, section] of contracts) {
@@ -131,7 +138,12 @@ function printTestsList(tests: TestFunction[]): void {
 	for (const [index, test] of tests.entries()) {
 		const isLast = index === tests.length - 1
 		const prefix = isLast ? "└──" : "├──"
-		console.log(`  │   ${prefix} ${getTestDescriptionFromName(test)}`)
+
+		const description = getTestDescriptionFromName(test)
+
+		const sourceLink = makeLinkToDefinition(test.definition)
+
+		console.log(`  │   ${prefix} ${description} ${chalk.grey(sourceLink)}`)
 	}
 }
 
@@ -189,4 +201,7 @@ function getReadableTestDescription(testName: string): string {
 			.join(" ")
 			.trim()
 	).trim()
+}
+function makeLink(path: string, range: unknown) {
+	throw new Error("Function not implemented.")
 }

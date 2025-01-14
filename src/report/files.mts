@@ -7,7 +7,7 @@ function printFileSection(files: any[], sectionName: string) {
 	console.log(` | Identified ${files.length} ${sectionName} files in test/:`)
 	console.log(` |`)
 	for (const file of files) {
-		console.log(` |-- ${path.basename(file.filePath)} (${file.version})`)
+		console.log(` |-- ${path.basename(file.path)} (${file.version})`)
 	}
 }
 
