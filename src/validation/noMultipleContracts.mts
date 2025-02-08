@@ -1,4 +1,4 @@
-import { Cursor, Query } from "@nomicfoundation/slang/cst"
+import { Cursor, Query, QueryMatchIterator } from "@nomicfoundation/slang/cst"
 import warningSystem from "../warning.mjs"
 import { SolidityFile } from "../utils/files.mjs"
 
@@ -7,15 +7,12 @@ export function checkIfFileHasMultipleContracts(
 	file: SolidityFile,
 	cursor: Cursor,
 ): boolean {
-	const contractQuery = Query.parse("@contract [ContractDefinition]")
+	const contractQuery = Query.create("@contract [ContractDefinition]")
 	const contractMatches = cursor.query([contractQuery])
 
-	const matches = []
+	const matches = Array.from(contractMatches)
 
 	// Check if there is more than one contract in the file
-	for (const match of contractMatches) {
-		matches.push(match.captures["contract"]![0]!)
-	}
 
 	const hasMultipleContracts = matches.length > 1
 

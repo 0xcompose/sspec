@@ -11,7 +11,7 @@ export function parseFunctions(
 	const functionNames: FunctionName[] = []
 
 	// Define a query to find all function definitions and capture their names
-	const functionQuery = Query.parse(
+	const functionQuery = Query.create(
 		"[FunctionDefinition [FunctionName @function_name [Identifier]]]",
 	)
 

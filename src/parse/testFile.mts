@@ -58,7 +58,7 @@ function populateTestFunctions(
 	testFileScope: TestFileScope,
 	cursor: Cursor,
 ) {
-	const query = Query.parse(
+	const query = Query.create(
 		"[FunctionDefinition [FunctionName @function_name [Identifier]]]",
 	)
 	const matches = cursor.query([query])

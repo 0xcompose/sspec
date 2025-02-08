@@ -18,7 +18,7 @@ export function toPascalCase(str: string): string {
 }
 
 export function getContractName(file: SolidityFile, cursor: Cursor): string {
-	const query = Query.parse(
+	const query = Query.create(
 		"[ContractDefinition @contract_name [Identifier]]",
 	)
 	const matches = cursor.query([query])

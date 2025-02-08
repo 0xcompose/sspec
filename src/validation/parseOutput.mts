@@ -5,7 +5,7 @@ export function validateParseOutput(parseOutput: ParseOutput) {
 	const isValid = parseOutput.isValid()
 
 	if (!isValid) {
-		for (const error of parseOutput.errors) {
+		for (const error of parseOutput.errors()) {
 			warningSystem.addError(
 				`Error at byte offset ${error.textRange.start.utf8}: ${error.message}`,
 			)

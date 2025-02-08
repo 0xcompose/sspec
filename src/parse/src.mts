@@ -35,8 +35,7 @@ export function parseSoliditySourceFile(
 	const source = readSolidityFile(file)
 
 	const parser = Parser.create(file.version)
-	ParseOutput
-	const parseOutput = parser.parse(NonterminalKind.SourceUnit, source)
+	const parseOutput = parser.parseFileContents(source)
 
 	const { isValid } = validateParseOutput(parseOutput)
 	if (!isValid) return
@@ -46,7 +45,7 @@ export function parseSoliditySourceFile(
 	// Query the contract names
 	const cursor = parseOutput.createTreeCursor()
 
-	const query = Query.parse(
+	const query = Query.create(
 		`[ContractDefinition 
 			@contract_name [Identifier]
 		]`,
