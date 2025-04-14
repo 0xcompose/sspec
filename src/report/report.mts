@@ -14,6 +14,7 @@ import {
 } from "../utils/utils.mjs"
 import chalk from "chalk"
 import { makeLinkToDefinition } from "../utils/links.mjs"
+import { getColoredTestName } from "./colors.mjs"
 
 type ReportSection = {
 	functions: Map<FunctionName, TestFunction[]>
@@ -113,7 +114,7 @@ function printContractsReport(
 			}
 
 			if (tests.length === 0) {
-				console.log(`  ├── \x1b[31m${functionName}\x1b[0m`)
+				console.log(`  ├── ${chalk.red(functionName)}`)
 				continue
 			}
 			console.log(`  ├── ${functionName}`)
@@ -149,7 +150,7 @@ function printTestsList(tests: TestFunction[]): void {
 
 function getTestDescriptionFromName(test: TestFunction): string {
 	if (test.scope.type === ScopeType.Unknown) {
-		return `\x1b[33m${test.name}\x1b[0m`
+		return `${chalk.yellow(test.name)}`
 	}
 
 	// TODO: unify regexps across the codebase
@@ -160,24 +161,12 @@ function getTestDescriptionFromName(test: TestFunction): string {
 		warningSystem.addWarning(
 			`Test name "${test.name}" does not match the expected pattern.`,
 		)
-		return `\x1b[33m${test.name}\x1b[0m`
+		return `${chalk.yellow(test.name)}`
 	}
 
 	let readableTestName = getReadableTestDescription(test.name)
 
-	// if (test.scope.type === ScopeType.Function) {
-	// 	const functionNamePattern = new RegExp(
-	// 		`\\b${test.scope.target}\\b`,
-	// 		"i",
-	// 	)
-	// 	readableTestName = readableTestName
-	// 		.replace(functionNamePattern, "")
-	// 		.trim()
-	// }
-
-	return /revert/i.test(test.name)
-		? `\x1b[31m${readableTestName}\x1b[0m`
-		: readableTestName
+	return getColoredTestName(readableTestName)
 }
 
 function getReadableTestDescription(testName: string): string {
@@ -206,4 +195,8 @@ function getReadableTestDescription(testName: string): string {
 			.join(" ")
 			.trim()
 	).trim()
+}
+
+function isTestForRevert(testName: string): boolean {
+	return /revert/i.test(testName)
 }
